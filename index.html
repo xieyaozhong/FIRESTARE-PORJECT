@@ -7,7 +7,7 @@
   <meta name="description" content="結合物理彈珠、三軸老虎機與三層圓盤的原創網頁柏青哥遊戲。" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-  <title>星火混合式柏青哥 V6.2｜撞針區導流修正版</title>
+  <title>星火混合式柏青哥 V6.3｜100% 撞針入口版</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -19,7 +19,7 @@
   <aside class="hud">
     <div>
       <div class="logo">星火 HYBRID PACHINKO</div>
-      <div class="sub">長按蓄力發射。上方入口已改為開放式導流，彈珠會更容易進入撞針區；擊中左上 GOLD LOCK 可釋放所有得分 ×10 的黃金彈珠。</div>
+      <div class="sub">發射軌已重新布局為封閉式金屬導流槽，出口直接對準第一排撞針；每一顆由玩家發射的彈珠都會先進入撞針區，再參與後續機械與得分玩法。</div>
     </div>
 
     <div class="card">
@@ -99,7 +99,7 @@
     <button class="secondary" id="resetBtn">重新開始本局</button>
 
     <div class="card legend">
-      <span><i class="dot" style="color:#59e7ff;background:#59e7ff"></i>一般獎洞：10～50 分</span>
+      <span><i class="dot" style="color:#59e7ff;background:#59e7ff"></i>封閉發射槽：每球必進撞針區</span>
       <span><i class="dot" style="color:#ffd66b;background:#ffd66b"></i>黃金彈珠：所有得分與大獎 ×10</span>
       <span><i class="dot" style="color:#69ffb5;background:#69ffb5"></i>機械裝置：撥輪、彈板與救球桿</span>
       <span><i class="dot" style="color:#ff5ea8;background:#ff5ea8"></i>START：圖案組合改變轉盤規則</span>
@@ -118,6 +118,7 @@
 <script src="./v6-upgrade.js" defer></script>
 <script src="./v6-containment-fix.js" defer></script>
 <script src="./v6-entry-routing-fix.js" defer></script>
+<script src="./v6-layout-overhaul.js" defer></script>
 <script src="./main.js" defer></script>
 </body>
 </html>
