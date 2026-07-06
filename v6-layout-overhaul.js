@@ -1,9 +1,5 @@
 "use strict";
 
-// V6.3 layout overhaul.
-// Rebuilds the launch entrance as a sealed chute with a one-way feeder so every
-// launched ball reaches the first pin bank while the outer safety cage remains.
-
 const ENTRY_LEFT_V63=620;
 const ENTRY_RIGHT_V63=748;
 const ENTRY_TOP_V63=92;
@@ -13,7 +9,6 @@ const baseBuildBoardV63=buildBoard;
 buildBoard=function(){
   baseBuildBoardV63();
 
-  // Remove all previous temporary entry and spring routing geometry.
   for(let i=segments.length-1;i>=0;i--){
     const s=segments[i];
     const oldTopGuide=s.kind==="guide"&&(
@@ -23,8 +18,6 @@ buildBoard=function(){
     if(s.kind==="entry-guide"||s.kind==="spring-guard"||oldTopGuide)segments.splice(i,1);
   }
 
-  // Closed launch chute. It continues the original curved firing rail and then
-  // widens into the right-side pin field instead of crossing the centre module.
   addSegment(608,43,600,96,.82,"launch-chute");
   addSegment(600,96,610,146,.80,"launch-chute");
   addSegment(610,146,626,198,.78,"launch-chute");
@@ -35,12 +28,9 @@ buildBoard=function(){
   addSegment(720,145,744,194,.78,"launch-chute");
   addSegment(744,194,744,292,.76,"launch-chute");
 
-  // Narrow one-way throat that releases directly over the first pin bank.
   addSegment(626,292,648,322,.72,"entry-throat");
   addSegment(744,292,722,322,.72,"entry-throat");
 
-  // Compact side return rails keep outward shots in play without occupying the
-  // central field.
   addSegment(82,360,122,334,.94,"spring-guard");
   addSegment(82,560,124,532,.94,"spring-guard");
   addSegment(82,760,132,728,.98,"spring-guard");
@@ -50,8 +40,6 @@ buildBoard=function(){
   addSegment(88,878,150,846,1.02,"spring-guard");
   addSegment(762,878,700,846,1.02,"spring-guard");
 
-  // Dedicated first pin bank beneath the chute. These pins make the transition
-  // visually clear and guarantee immediate interaction after entry.
   const entryPins=[
     [646,338],[684,338],[722,338],
     [665,374],[703,374],
@@ -62,13 +50,10 @@ buildBoard=function(){
     if(!occupied)pins.push({x,y,r:6.2,flash:0,entryPin:true});
   }
 
-  // Reposition the right spinner slightly lower so it enhances the pin field
-  // rather than interfering with the entrance throat.
   const rightSpinner=mechanismsV6.find(m=>m.type==="spinner"&&m.x>500);
   if(rightSpinner){rightSpinner.x=694;rightSpinner.y=470;rightSpinner.length=44;}
 };
 
-// Suppress the older V6.2 entry arrows; V6.3 draws the full chute instead.
 if(typeof drawEntryRouteV62==="function")drawEntryRouteV62=function(){};
 
 const baseLaunchV63=launch;
@@ -96,7 +81,6 @@ Ball.prototype.update=function(dt){
 
   this.entryAge+=dt;
 
-  // Keep the ball inside the visible chute while it descends.
   if(this.y<ENTRY_BOTTOM_V63){
     if(this.x<ENTRY_LEFT_V63){
       this.x=ENTRY_LEFT_V63;
@@ -112,7 +96,6 @@ Ball.prototype.update=function(dt){
     capBallSpeedV61(this,1500);
   }
 
-  // Crossing this gate means the ball has entered the actual pin area.
   if(this.y>=320&&this.x>=615&&this.x<=755){
     this.entryPhase="pins";
     this.hasEnteredPins=true;
@@ -120,9 +103,6 @@ Ball.prototype.update=function(dt){
     return;
   }
 
-  // Absolute one-way feeder. This only activates when an unusual series of
-  // collisions keeps a ball in the upper chute too long. It occurs inside the
-  // metal feeder, so the correction is not visually abrupt.
   if(this.entryAge>1.05){
     this.x=Math.max(642,Math.min(724,this.entryTargetX||684));
     this.y=306;
@@ -137,7 +117,6 @@ Ball.prototype.update=function(dt){
 function drawLaunchChuteV63(){
   ctx.save();
 
-  // Dark recessed channel behind the physical rails.
   const channel=ctx.createLinearGradient(600,70,744,330);
   channel.addColorStop(0,"#07101a");
   channel.addColorStop(.48,"#12263b");
