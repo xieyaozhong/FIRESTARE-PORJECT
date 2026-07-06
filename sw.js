@@ -1,7 +1,7 @@
-const CACHE = "spark-pachinko-v5-2";
+const CACHE = "spark-pachinko-v6-1";
 const ASSETS = [
   "./", "./index.html", "./styles.css", "./state.js", "./features.js",
-  "./controls.js", "./render-board.js", "./render-feature.js", "./main.js",
+  "./controls.js", "./render-board.js", "./render-feature.js", "./v6-upgrade.js", "./main.js",
   "./manifest.webmanifest", "./icon.svg"
 ];
 self.addEventListener("install", event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS))));
