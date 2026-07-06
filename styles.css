@@ -164,3 +164,8 @@ button.secondary.active{background:#59e7ff22;border-color:#59e7ff99;color:#aef4f
   .hud{margin:0;max-height:calc(100svh - 8px);overflow-y:auto;border-radius:18px;padding:10px;gap:8px}
   canvas{width:min(100%,calc(75svh - 15px))}
 }
+
+.combo-guide{display:grid;gap:7px}
+.combo-row{display:grid;grid-template-columns:66px 1fr;gap:8px;align-items:start;padding-top:6px;border-top:1px solid #ffffff0d;font-size:10px;line-height:1.4;color:#aebbd2}
+.combo-row:first-of-type{border-top:0}
+.combo-row b{color:#ffe08a;font-size:11px}
