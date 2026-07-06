@@ -1,4 +1,4 @@
-const CACHE = "spark-pachinko-v5-1";
+const CACHE = "spark-pachinko-v5-2";
 const ASSETS = [
   "./", "./index.html", "./styles.css", "./state.js", "./features.js",
   "./controls.js", "./render-board.js", "./render-feature.js", "./main.js",
