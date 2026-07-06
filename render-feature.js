@@ -1,93 +1,259 @@
-# 星火太空任務柏青哥 V6.4
+"use strict";
 
-一款不需安裝套件、可直接在瀏覽器遊玩的原創柏青哥模擬遊戲，將物理彈珠、三軸老虎機和三層機械圓盤整合成同一套流程。
+function drawHybridFeature(){
+    const cx=425;
 
-## 線上玩法流程
+    ctx.save();
 
-1. 長按蓄力，放開後發射彈珠。
-2. 彈珠撞擊釘子、彈力盤與獎洞。
-3. 命中 `START` 後啟動三軸老虎機。
-4. 老虎機結果決定三層圓盤的挑戰等級。
-5. 每層圓盤只有綠色 `GO` 洞能前往下一層。
-6. 連過三層取得最終 JACKPOT。
+    // -------- Slot machine: upper module --------
+    const sx=248,sy=170,sw=354,sh=220;
+    const outer=ctx.createLinearGradient(sx,sy,sx+sw,sy+sh);
+    outer.addColorStop(0,"#4a2708");
+    outer.addColorStop(.22,"#f6d66e");
+    outer.addColorStop(.48,"#fff4b4");
+    outer.addColorStop(.70,"#a66d1c");
+    outer.addColorStop(1,"#281404");
+    ctx.fillStyle=outer;
+    ctx.shadowColor=feature.mode==="slot"?"#ff3c85":"#ffd66b";
+    ctx.shadowBlur=feature.mode==="slot"?30:14;
+    ctx.beginPath();ctx.roundRect(sx,sy,sw,sh,22);ctx.fill();
+    ctx.shadowBlur=0;
 
-## V5 新功能
+    ctx.fillStyle="#080a0f";
+    ctx.beginPath();ctx.roundRect(sx+9,sy+9,sw-18,sh-18,16);ctx.fill();
+    ctx.strokeStyle="#ffffff35";ctx.lineWidth=2;ctx.stroke();
 
-- **FEVER 多球模式**：碰撞與得分累積能量，滿 100 後維持 12 秒，每次發射變成三球。
-- **三種難度**：休閒、經典、極限；會影響重力、老虎機機率、圓盤通過率與獎勵倍率。
-- **自動發射**：適合觀察物理碰撞與展示機台。
-- **任務系統**：依序完成 START、發射、分數與 JACKPOT 任務。
-- **成就系統**：首次發射、首次 START、首次 FEVER、首次 JACKPOT 等。
-- **本機保存**：最高分、生涯統計、難度、音效與成就會保存在瀏覽器。
-- **全螢幕與鍵盤操作**。
-- **PWA 離線支援**：部署後可加入手機主畫面。
-- **GitHub Pages 自動部署工作流程**。
+    ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.font="1000 18px system-ui";
+    ctx.fillStyle=feature.mode==="slot"?"#ff6ca1":"#ffe08a";
+    ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=10;
+    ctx.fillText("CHANCE REELS",cx,sy+27);
+    ctx.shadowBlur=0;
 
-## V6.1 防飛出修正
+    const reelY=sy+52,reelH=106,reelW=86,gap=10,firstX=sx+38;
+    slot.reels.forEach((reel,i)=>{
+      const rx=firstX+i*(reelW+gap);
+      const centerY=reelY+reelH/2;
+      const windowGrad=ctx.createLinearGradient(0,reelY,0,reelY+reelH);
+      windowGrad.addColorStop(0,"#08090d");
+      windowGrad.addColorStop(.22,"#e8e2c7");
+      windowGrad.addColorStop(.50,"#ffffff");
+      windowGrad.addColorStop(.78,"#e8e2c7");
+      windowGrad.addColorStop(1,"#08090d");
+      ctx.fillStyle=windowGrad;
+      ctx.beginPath();ctx.roundRect(rx,reelY,reelW,reelH,9);ctx.fill();
+      ctx.strokeStyle="#d7ad43";ctx.lineWidth=3;ctx.stroke();
 
-- 高速彈珠會拆分成最多 6 個物理子步驟，避免單幀穿越牆體。
-- 機台外圍加入不可見安全籠與最終位置回復機制。
-- 極端碰撞速度會被限制，但正常彈力與機械互動仍保留。
-- 略微降低側邊 KICKBACK 與 GOLD LOCK 的過度推力。
+      ctx.save();
+      ctx.beginPath();ctx.roundRect(rx+3,reelY+3,reelW-6,reelH-6,6);ctx.clip();
+      const total=slotSymbols.length;
+      const base=Math.floor(reel.pos);
+      const frac=reel.pos-base;
+      for(let k=-2;k<=2;k++){
+        const index=((base+k)%total+total)%total;
+        const yy=centerY+(k-frac)*reelH;
+        const symbol=slotSymbols[index].text;
+        ctx.textAlign="center";ctx.textBaseline="middle";
+        ctx.fillStyle=index===3?"#df1637":index===4?"#d89400":"#11141c";
+        ctx.font=symbol==="BAR"
+          ?"1000 27px system-ui"
+          :"900 42px Apple Color Emoji, Segoe UI Emoji, system-ui";
+        ctx.fillText(symbol,rx+reelW/2,yy);
+      }
+      ctx.restore();
 
-## V6.2 撞針區導流修正
+      ctx.strokeStyle="#ff2f5c";ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(rx+4,centerY);ctx.lineTo(rx+reelW-4,centerY);ctx.stroke();
+    });
 
-- 移除封住上方入口的長條彈力屋頂。
-- 防飛出功能改由外圍安全邊界負責。
-- 僅在左右邊緣保留短回流擋板，不再遮住中央下降路線。
-- 發射出口下方加入低彈力導流漏斗，將彈珠帶入前幾排撞針。
-- 彈珠若在入口區循環過久，會受到非常輕微的向下導引。
+    ctx.fillStyle=feature.mode==="slot"?"#ff78a7":"#65e9ff";
+    ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=9;
+    ctx.font="1000 14px system-ui";
+    ctx.fillText(slot.message,cx,sy+184);
+    ctx.shadowBlur=0;
 
-## V6.4 復古太空任務設計
+    // Slot bulbs.
+    for(let i=0;i<10;i++){
+      const bx=sx+24+i*34;
+      const on=feature.mode==="slot" || ((i+Math.floor(lampPhase*6))%3===0);
+      ctx.fillStyle=on?"#fff2a2":"#574421";
+      ctx.shadowColor=on?"#ffd66b":"transparent";ctx.shadowBlur=on?12:0;
+      ctx.beginPath();ctx.arc(bx,sy+205,4.5,0,Math.PI*2);ctx.fill();
+    }
+    ctx.shadowBlur=0;
 
-- 參考經典 1990 年代太空彈珠台的資訊架構，以原創素材重新設計。
-- 左側保留完整物理球台，右側改為黑底紫色點陣任務電腦。
-- 球台加入星空紋理、紅色金屬軌、彩色方向箭頭、中央發光反應爐、任務目標燈與下方三角彈板外觀。
-- 新增軍階顯示：Cadet、Ensign、Lieutenant、Commander、Star Captain。
-- 新增四階段任務循環：點亮三個任務目標、啟動 START、開啟 GOLD LOCK、完成三層轉盤。
-- 任務完成會獲得額外分數與彈珠，並在右側任務電腦顯示下一個目標。
-- 不使用參考遊戲的圖像或音效素材，僅採用其經典的球台／任務面板分區概念。
+    // Gate connecting slot to the three disks.
+    const gateOpen=feature.mode==="crank" || feature.mode==="result";
+    ctx.fillStyle=gateOpen?"#69ffb5":"#343b47";
+    ctx.shadowColor=gateOpen?"#69ffb5":"transparent";ctx.shadowBlur=gateOpen?18:0;
+    ctx.beginPath();
+    ctx.moveTo(cx-22,sy+220);ctx.lineTo(cx+22,sy+220);
+    ctx.lineTo(cx+15,430);ctx.lineTo(cx-15,430);ctx.closePath();ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.fillStyle=gateOpen?"#09271a":"#131820";
+    ctx.font="1000 10px system-ui";ctx.fillText(gateOpen?"GATE OPEN":"LOCKED",cx,410);
 
-## 操作
+    // -------- Three-tier crank: lower module --------
+    const centers=[
+      {y:470,rx:122,ry:40},
+      {y:580,rx:134,ry:44},
+      {y:690,rx:146,ry:49}
+    ];
 
-| 操作 | 手機／平板 | 電腦 |
-|---|---|---|
-| 蓄力發射 | 長按發射按鈕 | 按住空白鍵 |
-| 自動發射 | 點擊按鈕 | `A` |
-| 音效 | 點擊按鈕 | `M` |
-| 全螢幕 | 點擊按鈕 | `F` |
+    for(let i=2;i>=0;i--){
+      const c=centers[i];
+      const active=feature.mode==="crank" && crank.stage===i;
+      const cleared=(feature.mode==="crank" || feature.mode==="result") && crank.stage>i;
+      const dim=feature.mode==="crank" && crank.stage<i;
 
-## 本機執行
+      ctx.save();
+      ctx.translate(cx,c.y);
 
-直接開啟 `index.html` 即可。Service Worker 離線功能需要透過 HTTP 伺服器執行，例如：
+      ctx.fillStyle="#07090d";
+      ctx.beginPath();ctx.ellipse(0,13,c.rx+8,c.ry+11,0,0,Math.PI*2);ctx.fill();
 
-```bash
-python -m http.server 8000
-```
+      const rim=ctx.createLinearGradient(-c.rx,0,c.rx,0);
+      rim.addColorStop(0,"#242932");rim.addColorStop(.18,"#dce1e8");
+      rim.addColorStop(.38,"#606976");rim.addColorStop(.58,"#f7f8fa");
+      rim.addColorStop(.82,"#59626f");rim.addColorStop(1,"#171b22");
+      ctx.fillStyle=rim;
+      ctx.shadowColor=active?"#ff437e":cleared?"#69ffb5":"#52657d";
+      ctx.shadowBlur=active?24:cleared?14:5;
+      ctx.beginPath();ctx.ellipse(0,0,c.rx+8,c.ry+8,0,0,Math.PI*2);ctx.fill();
+      ctx.shadowBlur=0;
 
-然後開啟 `http://localhost:8000`。
+      const bowl=ctx.createRadialGradient(-20,-10,5,0,0,c.rx);
+      bowl.addColorStop(0,dim?"#1c2026":"#6c747d");
+      bowl.addColorStop(.42,dim?"#0e1217":"#333942");
+      bowl.addColorStop(.78,"#090b10");bowl.addColorStop(1,"#020306");
+      ctx.fillStyle=bowl;
+      ctx.beginPath();ctx.ellipse(0,-2,c.rx-9,c.ry-8,0,0,Math.PI*2);ctx.fill();
 
-## GitHub Pages
+      ctx.strokeStyle=active?"#ff6b9b55":"#ffffff20";ctx.lineWidth=2;
+      for(let g=0;g<12;g++){
+        const a=crank.stages[i].diskAngle+g*Math.PI/6;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a)*24,Math.sin(a)*9-2);
+        ctx.lineTo(Math.cos(a)*(c.rx-17),Math.sin(a)*(c.ry-13)-2);
+        ctx.stroke();
+      }
 
-專案內已包含 `.github/workflows/deploy-pages.yml`。在儲存庫設定中將 **Settings → Pages → Source** 設為 **GitHub Actions**，之後每次推送到 `main` 都會自動更新網站。
+      for(let h=0;h<6;h++){
+        const a=crank.stages[i].diskAngle+h*Math.PI*2/6;
+        const hx=Math.cos(a)*(c.rx-41);
+        const hy=Math.sin(a)*(c.ry-18)-2;
+        const pass=h===0;
+        const selected=active && crank.stages[i].targetHole===h && crank.timer>1.72;
+        ctx.fillStyle="#000";
+        ctx.shadowColor=pass?"#69ffb5":"#ff4a63";
+        ctx.shadowBlur=selected?24:pass?9:3;
+        ctx.beginPath();ctx.ellipse(hx,hy,13,6.5,0,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle=pass?"#72ffc0":"#a72f3f";
+        ctx.lineWidth=selected?4:2;ctx.stroke();
+        if(pass){
+          ctx.fillStyle="#c1ffe0";ctx.font="1000 8px system-ui";ctx.fillText("GO",hx,hy);
+        }
+      }
+      ctx.shadowBlur=0;
 
-## 使用聲明
+      ctx.fillStyle=active?"#ff5c92":cleared?"#6effb8":"#9099a8";
+      ctx.font="1000 11px system-ui";ctx.textAlign="left";
+      ctx.fillText(i===2?"FINAL":`LEVEL ${i+1}`,-c.rx+11,-c.ry+7);
 
-本遊戲僅供程式設計、物理模擬與娛樂展示，所有分數皆不具現金價值。
+      if(active){
+        const st=crank.stages[i];
+        const bx=Math.cos(st.ballAngle)*st.orbit;
+        const by=Math.sin(st.ballAngle)*(st.orbit*.34)-7;
+        const ballG=ctx.createRadialGradient(bx-4,by-5,1,bx,by,10);
+        ballG.addColorStop(0,"#fff");ballG.addColorStop(.28,"#d9f7ff");
+        ballG.addColorStop(.64,"#718794");ballG.addColorStop(1,"#12181e");
+        ctx.fillStyle=ballG;ctx.shadowColor="#dfffff";ctx.shadowBlur=13;
+        ctx.beginPath();ctx.arc(bx,by,10,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle="#ffffffbb";ctx.lineWidth=1;ctx.stroke();ctx.shadowBlur=0;
+      }
+      ctx.restore();
 
+      if(i<2){
+        ctx.fillStyle=cleared?"#69ffb5":"#303844";
+        ctx.shadowColor=cleared?"#69ffb5":"transparent";ctx.shadowBlur=cleared?12:0;
+        ctx.beginPath();
+        ctx.moveTo(cx-17,c.y+38);ctx.lineTo(cx+17,c.y+38);
+        ctx.lineTo(cx+11,c.y+65);ctx.lineTo(cx-11,c.y+65);
+        ctx.closePath();ctx.fill();ctx.shadowBlur=0;
+      }
+    }
 
-## V6 機械與黃金彈珠更新
+    // Unified status display.
+    ctx.fillStyle="#07090d";
+    ctx.beginPath();ctx.roundRect(282,756,286,42,11);ctx.fill();
+    ctx.strokeStyle=feature.mode==="crank"?"#ff4c87":feature.mode==="slot"?"#ffd66b":"#59e7ff";
+    ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle=feature.mode==="crank"?"#ff79a8":feature.mode==="slot"?"#ffe18a":"#8ceeff";
+    ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=9;
+    ctx.font="1000 14px system-ui";ctx.textAlign="center";
+    const status=feature.mode==="crank" || feature.mode==="result" ? crank.message :
+      feature.mode==="slot" ? "REELS SELECT THE GATE" : "HIT START TO BEGIN";
+    ctx.fillText(status,cx,777);ctx.shadowBlur=0;
 
-- 新增左右旋轉撥輪、兩組自動彈力擋板、移動救球桿與側邊高彈力回流軌。
-- 左上方 GOLD LOCK 是較難命中的特殊目標；擊中後會從黃金艙釋放一顆黃金彈珠。
-- 黃金彈珠進入任何得分槽、START、拉霸即時獎勵與三層轉盤最終獎勵時，分數均為 10 倍。
-- 777、鑽石、星星、BAR、鈴鐺、櫻桃、各種對子，以及 7+星星+鑽石、櫻桃+鈴鐺+BAR 等混合組合，都會套用不同的轉盤 GO 洞數量、速度、通關率、獎金、額外彈珠或機械增壓效果。
+    for(let i=0;i<8;i++){
+      const bx=281+i*41;
+      const on=feature.mode!=="idle" || ((i+Math.floor(lampPhase*6))%3===0);
+      ctx.fillStyle=on?"#ff4f83":"#4d222d";
+      ctx.shadowColor=on?"#ff2c70":"transparent";ctx.shadowBlur=on?12:0;
+      ctx.beginPath();ctx.arc(bx,813,5.5,0,Math.PI*2);ctx.fill();
+    }
+    ctx.shadowBlur=0;
 
+    ctx.restore();
+  }
 
-## V6.3 100% 撞針入口布局
+  function drawBalls(){
+    for(const ball of balls){
+      for(const t of ball.trail){
+        ctx.globalAlpha=t.a;
+        ctx.fillStyle="#9ceeff";
+        ctx.beginPath();ctx.arc(t.x,t.y,ball.r*.55,0,Math.PI*2);ctx.fill();
+      }
+      ctx.globalAlpha=1;
+      const bg=ctx.createRadialGradient(ball.x-4,ball.y-5,1,ball.x,ball.y,ball.r);
+      bg.addColorStop(0,"#ffffff");bg.addColorStop(.25,"#dff9ff");bg.addColorStop(.58,"#6d8ca7");bg.addColorStop(1,"#172331");
+      ctx.fillStyle=bg;ctx.shadowColor="#b8f7ff";ctx.shadowBlur=8;
+      ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle="#ffffffaa";ctx.lineWidth=1.1;ctx.stroke();
+    }
+    ctx.shadowBlur=0;ctx.globalAlpha=1;
+  }
 
-- 發射入口重新設計為封閉式金屬導流槽。
-- 導流槽出口固定對準右側第一排撞針。
-- 新增單向落球喉道與專用入口撞針。
-- 玩家發射的每一顆彈珠都會先進入撞針區。
-- 若彈珠在入口停留過久，槽內餵球閘會自動送入撞針區。
+  function drawParticles(){
+    for(const p of particles){
+      ctx.globalAlpha=Math.max(0,p.life);
+      ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=8;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;ctx.shadowBlur=0;
+  }
+
+  function drawOverlay(){
+    const gloss=ctx.createLinearGradient(0,0,W,H);
+    gloss.addColorStop(0,"#ffffff13");gloss.addColorStop(.24,"#ffffff00");
+    gloss.addColorStop(.54,"#8fdfff08");gloss.addColorStop(1,"#ffffff00");
+    ctx.fillStyle=gloss;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(360,0);ctx.lineTo(760,H);ctx.lineTo(520,H);ctx.closePath();ctx.fill();
+
+    if(jackpotFlash>0){
+      ctx.globalAlpha=Math.min(.7,jackpotFlash*.35);
+      ctx.fillStyle="#ff5ea8";ctx.fillRect(0,0,W,H);
+      ctx.globalAlpha=1;
+      ctx.textAlign="center";ctx.font="1000 76px system-ui";ctx.fillStyle="#fff";
+      ctx.shadowColor="#ff2d8c";ctx.shadowBlur=40;
+      ctx.fillText("JACKPOT!",430,590);ctx.shadowBlur=0;
+    }
+
+    if(ballsLeft<=0 && balls.length===0){
+      ctx.fillStyle="#05070bcc";roundedRect(170,500,560,150,28);ctx.fill();
+      ctx.strokeStyle="#ffd66b88";ctx.lineWidth=2;ctx.stroke();
+      ctx.fillStyle="#fff";ctx.font="900 32px system-ui";ctx.textAlign="center";
+      ctx.fillText("彈珠用完了",450,560);
+      ctx.font="600 18px system-ui";ctx.fillStyle="#b8c2d8";
+      ctx.fillText("按「補充 10 顆」繼續遊玩",450,607);
+    }
+  }
