@@ -7,8 +7,9 @@
   <meta name="description" content="結合物理彈珠、三軸老虎機與三層圓盤的原創網頁柏青哥遊戲。" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-  <title>星火混合式柏青哥 V6.3｜100% 撞針入口版</title>
+  <title>星火太空任務柏青哥 V6.4｜復古太空彈珠台</title>
   <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./space-cadet-theme.css" />
 </head>
 <body>
 <div class="app">
@@ -18,14 +19,24 @@
 
   <aside class="hud">
     <div>
-      <div class="logo">星火 HYBRID PACHINKO</div>
-      <div class="sub">長按蓄力發射。發射軌已重新布局為封閉式金屬導流槽，出口直接對準第一排撞針；每一顆由玩家發射的彈珠都會先進入撞針區，再參與後續機械與得分玩法。</div>
+      <div class="logo">STARCADE HYBRID PINBALL</div>
+      <div class="sub">原創復古太空任務彈珠台。封閉式發射槽確保每球先進入撞針區；依照右側任務電腦的指示點亮目標、啟動拉霸、解鎖黃金彈珠並挑戰三層轉盤。</div>
     </div>
 
     <div class="card">
       <div class="label">娛樂積分</div>
       <div class="value" id="score">000000</div>
       <div class="sub">最高紀錄：<b id="highScore">000000</b></div>
+    </div>
+
+    <div class="card space-dmd-card">
+      <div class="space-dmd-title">MISSION COMPUTER</div>
+      <div class="space-dmd" id="spaceMissionStatus">HIT THE THREE MISSION TARGETS</div>
+      <div class="space-rank-row">
+        <div class="space-rank-box"><small>MISSION</small><b id="spaceMissionTitle">SELECT MISSION</b></div>
+        <div class="space-rank-box"><small>RANK</small><b id="spaceRankStatus">CADET</b></div>
+      </div>
+      <div class="space-dmd small" id="spaceBonusStatus" style="margin-top:7px">MISSION 1 BONUS 700</div>
     </div>
 
     <div class="row">
@@ -119,6 +130,7 @@
 <script src="./v6-containment-fix.js" defer></script>
 <script src="./v6-entry-routing-fix.js" defer></script>
 <script src="./v6-layout-overhaul.js" defer></script>
+<script src="./v6-space-cadet-theme.js" defer></script>
 <script src="./main.js" defer></script>
 </body>
 </html>
