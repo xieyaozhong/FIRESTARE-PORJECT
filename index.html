@@ -3,34 +3,70 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <meta name="theme-color" content="#180808">
-  <meta name="description" content="沉浸式真實柏青哥風格：大型機械盤面、黃金彈珠、三層轉盤與寫實機台外觀。">
-  <title>星火混合式柏青哥 V6.6｜寫實沼澤風機台</title>
+  <meta name="theme-color" content="#140605">
+  <meta name="description" content="保留三層轉盤核心的寫實大型柏青哥機台。">
+  <title>星火混合式柏青哥 V6.7｜三層轉盤核心機台</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=v66-swamp-style-3">
+  <link rel="stylesheet" href="./styles.css?v=v67-triple-crank-cabinet">
   <script>
     (()=>{try{if("caches" in window)caches.keys().then(keys=>Promise.all(keys.map(key=>caches.delete(key))));if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(items=>items.forEach(item=>item.unregister()))}catch(_){}})();
   </script>
 </head>
 <body>
-  <div class="ambient ambient-left"></div>
-  <div class="ambient ambient-right"></div>
+  <div class="ambient ambient-red"></div>
+  <div class="ambient ambient-green"></div>
 
   <div class="app">
     <main class="machine-shell">
-      <div class="machine-badge left">RISK</div>
-      <div class="machine-badge right">JACKPOT</div>
-      <div class="machine-frame">
-        <canvas id="game" width="900" height="1200" aria-label="柏青哥遊戲區"></canvas>
-        <div class="glass-tint" aria-hidden="true"></div>
-      </div>
+      <header class="machine-topper">
+        <div class="topper-wing left-wing"><span></span><span></span><span></span></div>
+        <div class="topper-title">
+          <small>EXTREME MECHANICAL SERIES</small>
+          <strong>SWAMP RUSH</strong>
+          <b>TRIPLE CRANK</b>
+        </div>
+        <div class="topper-wing right-wing"><span></span><span></span><span></span></div>
+      </header>
+
+      <section class="machine-body">
+        <div class="lamp-column left-lamps" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+
+        <div class="machine-frame">
+          <div class="frame-label top-label">TRIPLE CRANK CORE</div>
+          <canvas id="game" width="900" height="1200" aria-label="柏青哥遊戲區"></canvas>
+          <div class="glass-tint" aria-hidden="true"></div>
+          <div class="frame-screw screw-a"></div>
+          <div class="frame-screw screw-b"></div>
+          <div class="frame-screw screw-c"></div>
+          <div class="frame-screw screw-d"></div>
+        </div>
+
+        <div class="lamp-column right-lamps" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+      </section>
+
+      <footer class="machine-deck">
+        <div class="deck-module risk-module">
+          <small>RISK LEVEL</small><strong>MAX</strong>
+        </div>
+        <div class="ball-tray">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+          <b>BALL RETURN</b>
+        </div>
+        <div class="deck-module jackpot-module">
+          <small>FINAL GATE</small><strong>×10</strong>
+        </div>
+      </footer>
     </main>
 
     <aside class="hud">
       <div class="hero">
-        <div class="hero-kicker">REALISTIC CABINET EDITION</div>
-        <div class="logo">星火 SWAMP RUSH PACHINKO</div>
-        <div class="sub">整體視覺改成更接近真實柏青哥機台的厚重塑膠外殼、金屬邊框、燈帶、玻璃反光與機械感轉盤；採用高風險巨大機台氛圍的原創設計。</div>
+        <div class="hero-kicker">V6.7 CABINET CONTROL TERMINAL</div>
+        <div class="logo">星火 TRIPLE CRANK PACHINKO</div>
+        <div class="sub">機台重新設計為上方大型招牌、中央玻璃盤面、左右燈柱與下方出珠托盤。盤面中央的三層轉盤完整保留，並作為整台機台的核心大獎機構。</div>
       </div>
 
       <div class="card score-card">
@@ -42,6 +78,14 @@
       <div class="row compact">
         <div class="card mini"><div class="label">剩餘彈珠</div><div class="value small" id="balls">30</div></div>
         <div class="card mini"><div class="label">最高連擊</div><div class="value small" id="combo">0</div></div>
+      </div>
+
+      <div class="card crank-status">
+        <div class="label">三層轉盤系統</div>
+        <div class="crank-diagram" aria-hidden="true">
+          <i class="disc disc-one"></i><i class="disc disc-two"></i><i class="disc disc-three"></i>
+        </div>
+        <div class="sub">拉霸圖案會改變三層轉盤的綠色通關孔數量與最終獎勵。</div>
       </div>
 
       <div class="card fever-card" id="feverCard">
@@ -56,7 +100,7 @@
         <div class="sub" id="powerText">0%</div>
       </div>
 
-      <button class="launch" id="launchBtn">長按蓄力・放開發射</button>
+      <button class="launch" id="launchBtn"><span>POWER LAUNCH</span><small>長按蓄力・放開發射</small></button>
 
       <div class="row">
         <button class="secondary" id="autoBtn">自動發射：關</button>
@@ -92,20 +136,20 @@
       </div>
 
       <div class="card combo-guide">
-        <div class="label">玩法重點</div>
-        <div class="combo-row"><b>START</b><span>中獎後啟動上方拉霸，圖案組合會連動三層轉盤孔位。</span></div>
-        <div class="combo-row"><b>黃金彈珠</b><span>打開左上 GOLD LOCK 後釋放，所有得分、START 與大獎收益皆為 10 倍。</span></div>
-        <div class="combo-row"><b>機械裝置</b><span>左右旋轉撥輪、彈板與移動救球桿會讓球路更接近實機感。</span></div>
-        <div class="combo-row"><b>風格定位</b><span>以巨大壓迫感與高風險感柏青哥機台為靈感，不直接重現任何特定作品畫面。</span></div>
+        <div class="label">玩法核心</div>
+        <div class="combo-row"><b>拉霸</b><span>命中 START 後抽取圖案組合。</span></div>
+        <div class="combo-row"><b>三層轉盤</b><span>依組合改變每層通關孔，連過三層取得大獎。</span></div>
+        <div class="combo-row"><b>黃金彈珠</b><span>得分槽、START 與轉盤獎勵全部 ×10。</span></div>
+        <div class="combo-row"><b>機械裝置</b><span>旋轉撥輪、彈板與救球桿持續改變球路。</span></div>
       </div>
 
       <button class="secondary accent" id="resetBtn">重新開始本局</button>
 
       <div class="card legend">
-        <span><i class="dot cyan"></i>一般獎洞與彈性撞擊物</span>
-        <span><i class="dot gold"></i>黃金彈珠：所有得分 ×10</span>
-        <span><i class="dot green"></i>機械裝置與通關孔</span>
-        <span><i class="dot pink"></i>START：啟動拉霸與轉盤</span>
+        <span><i class="dot cyan"></i>周圍彈性撞擊物</span>
+        <span><i class="dot gold"></i>黃金彈珠 ×10</span>
+        <span><i class="dot green"></i>三層轉盤通關孔</span>
+        <span><i class="dot pink"></i>START 拉霸入口</span>
       </div>
 
       <div class="notice">純娛樂物理模擬，積分不具現金價值。鍵盤：空白鍵蓄力、A 自動發射、M 音效、F 全螢幕。</div>
@@ -113,6 +157,6 @@
   </div>
 
   <div class="toast" id="toast"></div>
-  <script src="./game-stable-v65.js?v=v66-swamp-style-3" defer></script>
+  <script src="./game-stable-v65.js?v=v67-triple-crank-cabinet" defer></script>
 </body>
 </html>
