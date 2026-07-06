@@ -1,0 +1,119 @@
+/* V6.4 original retro-space pinball presentation inspired by classic 1990s tables. */
+:root{
+  --space-navy:#060915;
+  --space-blue:#101c43;
+  --space-purple:#9b76ff;
+  --space-red:#e43f5f;
+  --space-yellow:#ffe35e;
+  --space-metal:#a8b3c7;
+  --space-dmd:#b7a1ff;
+}
+html,body{
+  background:
+    radial-gradient(circle at 18% 15%,#243a7d55 0 2px,transparent 3px),
+    radial-gradient(circle at 72% 32%,#ffffff66 0 1px,transparent 2px),
+    radial-gradient(circle at 42% 75%,#af8cff55 0 1px,transparent 2px),
+    radial-gradient(ellipse at 50% 0%,#172b60 0,#080b1b 43%,#02030a 100%);
+  background-size:137px 137px,193px 193px,229px 229px,auto;
+}
+.app{max-width:1220px;grid-template-columns:minmax(0,calc(75svh - 13px)) minmax(290px,340px)}
+.machine{
+  background:linear-gradient(150deg,#c0cad8 0,#47546b 8%,#171d2c 19%,#050711 70%,#7c1d2f 92%,#d9e2ed 100%);
+  border:2px solid #e4ebf4aa;
+  box-shadow:0 32px 90px #000d,inset 0 0 0 4px #0e1320,inset 0 0 0 7px #c53955aa,inset 0 0 52px #304f9a38;
+}
+.machine:before{
+  border-color:#e34867aa;
+  box-shadow:inset 0 0 20px #ff385e55,0 0 18px #6ca8ff20;
+}
+canvas{
+  box-shadow:inset 0 0 55px #000,0 0 0 2px #c3cedd55,0 0 28px #315edb2c;
+}
+.hud{
+  background:linear-gradient(145deg,#bec8d6,#566276 5%,#171c28 12%,#05060b 93%,#525e70 100%);
+  border:2px solid #dbe3eeaa;
+  box-shadow:0 25px 70px #000c,inset 0 0 0 4px #111520,inset 0 0 0 6px #8d263a88;
+}
+.hud>div:first-child{
+  min-height:128px;
+  padding:14px 13px;
+  border-radius:14px;
+  background:
+    radial-gradient(circle at 78% 30%,#fff 0 1px,transparent 2px),
+    radial-gradient(circle at 24% 70%,#9e81ff 0 1px,transparent 2px),
+    linear-gradient(145deg,#151c43,#050710 72%);
+  border:2px solid #7c879a;
+  box-shadow:inset 0 0 28px #000,0 0 0 2px #191e2b;
+}
+.logo{
+  font-family:Impact,"Arial Black",system-ui,sans-serif;
+  font-style:italic;
+  font-size:25px;
+  letter-spacing:.045em;
+  color:#efeaff;
+  text-shadow:3px 3px 0 #6c3fb7,5px 5px 0 #1d2452,0 0 18px #b999ff;
+}
+.hud .sub{color:#bbc5dd}
+.card{
+  background:linear-gradient(180deg,#07090f,#030407);
+  border:2px solid #657086;
+  box-shadow:inset 0 0 0 2px #151a25,inset 0 0 22px #000,0 3px 0 #262d3c;
+  border-radius:8px;
+}
+.card .label{
+  color:#8c98b0;
+  font-family:"Courier New",monospace;
+  font-weight:900;
+}
+.value,.value.small,#highScore{
+  font-family:"Courier New",monospace;
+  color:var(--space-dmd);
+  text-shadow:0 0 5px #8f70ff,0 0 13px #6944f6;
+  letter-spacing:.06em;
+}
+.launch{
+  color:#fff;
+  background:linear-gradient(180deg,#ff7e9a,#c51f47 58%,#7c102c);
+  box-shadow:0 7px 0 #4c0719,0 13px 28px #000b,inset 0 2px 0 #ffd5df,inset 0 0 18px #ff9eb055;
+  text-shadow:0 1px 2px #400;
+}
+.launch.active,.launch:active{box-shadow:0 2px 0 #4c0719,0 8px 18px #000b,inset 0 2px 0 #ffd5df}
+button.secondary,.control{
+  border-color:#5c6680;
+  background:linear-gradient(180deg,#151a27,#06080e);
+}
+button.secondary.active{background:linear-gradient(180deg,#23485f,#08151d);border-color:#66e6ff;color:#c6f9ff}
+.meter{border-radius:3px;background:#020307;border-color:#555f73}
+.fill{border-radius:2px;background:linear-gradient(90deg,#5440d7,#4fcff4 42%,#ffe15c 72%,#f14a6e)}
+.combo-guide{border-color:#7d2f49}
+.combo-row b{color:#ffc95d}
+.legend .dot{border-radius:2px}
+.notice{color:#8f9bb1}
+.space-dmd-card{padding:10px}
+.space-dmd-title{
+  font:900 11px "Courier New",monospace;
+  letter-spacing:.13em;
+  color:#78849a;
+  margin-bottom:7px;
+}
+.space-dmd{
+  min-height:56px;
+  padding:8px 9px;
+  border:1px solid #2a3040;
+  background:#010104;
+  color:var(--space-dmd);
+  font:900 14px/1.35 "Courier New",monospace;
+  text-transform:uppercase;
+  white-space:pre-line;
+  text-shadow:0 0 5px #8c6cff,0 0 11px #6743e0;
+  box-shadow:inset 0 0 14px #000;
+}
+.space-dmd.small{min-height:38px;font-size:12px;color:#ffd96a;text-shadow:0 0 6px #df9d22}
+.space-rank-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}
+.space-rank-box{padding:7px;border:1px solid #30384b;background:#020307;text-align:center}
+.space-rank-box small{display:block;color:#6f7b92;font:900 8px "Courier New",monospace;letter-spacing:.1em}
+.space-rank-box b{display:block;margin-top:4px;color:#9ccfff;font:900 12px "Courier New",monospace;text-shadow:0 0 6px #408de6}
+@media(max-width:980px){
+  .app{max-width:none}
+  .hud>div:first-child{min-height:108px}
+}
