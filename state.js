@@ -78,7 +78,7 @@ const canvas = document.getElementById("game");
   ];
 
   const feature = {
-    mode:"idle",
+    mode:"idle", // idle | slot | crank | result
     cooldown:0,
     transition:0,
     tier:"NONE"
@@ -130,6 +130,7 @@ const canvas = document.getElementById("game");
     {x0:565, x1:685, value:50,  label:"50"},
     {x0:685, x1:765, value:20,  label:"20"}
   ];
+
 
   function safeLoad(){
     try{
@@ -209,6 +210,7 @@ const canvas = document.getElementById("game");
     return base.map(v=>Math.min(.97,v*boost));
   }
 
+  // ---------- Audio ----------
   let audioCtx = null;
   function sound(freq=520, duration=.035, volume=.025, type="sine") {
     if (muted) return;
@@ -226,6 +228,7 @@ const canvas = document.getElementById("game");
     } catch (_) {}
   }
 
+  // ---------- Geometry ----------
   function addSegment(x1,y1,x2,y2,restitution=.72,kind="wall"){
     segments.push({x1,y1,x2,y2,restitution,kind});
   }
@@ -244,6 +247,8 @@ const canvas = document.getElementById("game");
 
   function buildBoard(){
     pins.length=0; bumpers.length=0; segments.length=0;
+
+    // Main frame and launch lane.
     addSegment(74,186,74,1070,.72);
     addSegment(74,1070,765,1070,.60);
     addSegment(825,210,825,1115,.65);
@@ -251,10 +256,16 @@ const canvas = document.getElementById("game");
     addSegment(765,1000,725,1070,.65);
     addSegment(825,1115,765,1115,.55);
     addSegment(765,1115,765,1070,.55);
+
+    // Curved top guide: two rails forming a real launch path.
     addArc(648,215,177,0.00,-1.80,22,.84,"outer-rail");
     addArc(648,215,120,0.00,-1.63,18,.84,"inner-rail");
+
+    // Small guide lips where the ball exits into the field.
     addSegment(620,96,565,112,.80,"guide");
     addSegment(565,112,535,135,.80,"guide");
+
+    // Bottom funnels.
     const cuts = [85,205,325,445,565,685,765];
     for (let i=1;i<cuts.length-1;i++){
       const x=cuts[i];
@@ -263,15 +274,20 @@ const canvas = document.getElementById("game");
     }
     addSegment(85,920,85,1070,.65,"divider");
     addSegment(765,920,765,1070,.65,"divider");
+
+    // Decorative/functional central guides.
     addSegment(238,620,305,670,.72,"guide");
     addSegment(305,670,235,725,.72,"guide");
     addSegment(612,620,545,670,.72,"guide");
     addSegment(545,670,615,725,.72,"guide");
+
+    // Nail field: hexagonal spacing with small manufacturing offsets.
     let row=0;
     for(let y=225;y<=885;y+=54){
       const offset = (row%2)*27;
       for(let x=120+offset;x<=720;x+=54){
         if (x>720) continue;
+        // Keep openings around special bumpers and center jackpot gate.
         const blocked =
           ((x>235 && x<615) && (y>170 && y<820)) ||
           Math.hypot(x-235,y-570)<58 ||
@@ -285,6 +301,7 @@ const canvas = document.getElementById("game");
       }
       row++;
     }
+
     bumpers.push(
       {x:425,y:850,r:34,power:1.16,color:"#ff5ea8",flash:0,label:"START",triggerSlot:true},
       {x:235,y:570,r:31,power:1.08,color:"#59e7ff",flash:0,label:""},
@@ -293,6 +310,7 @@ const canvas = document.getElementById("game");
     );
   }
 
+  // ---------- Ball physics ----------
   class Ball {
     constructor(power){
       this.x = 795;
@@ -315,21 +333,29 @@ const canvas = document.getElementById("game");
       this.vx *= Math.pow(.9993,dt*120);
       this.vy *= Math.pow(.9996,dt*120);
       this.spin *= Math.pow(.997,dt*120);
+
       this.x += this.vx*dt;
       this.y += this.vy*dt;
+
+      // Gentle Magnus effect. Small, but enough to make launch strength/spin matter.
       const speed = Math.hypot(this.vx,this.vy);
       if(speed>80){
         const magnus = Math.max(-18,Math.min(18,this.spin*speed*.002));
         this.vx += (-this.vy/speed)*magnus*dt;
         this.vy += ( this.vx/speed)*magnus*dt;
       }
+
       for(const s of segments) collideBallSegment(this,s);
       for(const p of pins) collideBallCircle(this,p,.83,1,false);
       for(const b of bumpers) collideBallCircle(this,b,.90,b.power,true);
+
+      // Plunger floor and lane containment.
       if(this.y>1099 && this.x>760){
         this.y=1099;
         if(this.vy>0) this.vy*=-.42;
       }
+
+      // Pocket scoring.
       if(this.y > 1050 && this.x < 765){
         const pocket = pockets.find(p => this.x>=p.x0 && this.x<p.x1);
         if(pocket){
@@ -337,10 +363,13 @@ const canvas = document.getElementById("game");
           this.alive=false;
         }
       }
+
+      // Lost / stuck safety.
       if(this.y>1220 || this.x<-60 || this.x>960 || this.age>24){
         this.alive=false;
         activeCombo=0;
       }
+
       if(this.age%0.035<dt){
         this.trail.push({x:this.x,y:this.y,a:.35});
         if(this.trail.length>10)this.trail.shift();
@@ -359,6 +388,7 @@ const canvas = document.getElementById("game");
     const pen=minD-d;
     ball.x += nx*pen;
     ball.y += ny*pen;
+
     const vn=ball.vx*nx+ball.vy*ny;
     if(vn<0){
       const tx=-ny, ty=nx;
@@ -366,13 +396,18 @@ const canvas = document.getElementById("game");
       const impulse=-(1+restitution)*vn*power;
       ball.vx += impulse*nx;
       ball.vy += impulse*ny;
+
+      // Tangential friction + spin exchange.
       const slip=vt-ball.spin*ball.r;
       ball.vx -= tx*slip*.035;
       ball.vy -= ty*slip*.035;
       ball.spin += slip*.018;
+
+      // Tiny irregularity prevents identical, robotic paths.
       const irregular=(Math.sin(obj.x*1.91+obj.y*.73+ball.hitCount)*.5)*7;
       ball.vx += tx*irregular;
       ball.vy += ty*irregular;
+
       obj.flash=.12;
       ball.hitCount++;
       activeCombo++;

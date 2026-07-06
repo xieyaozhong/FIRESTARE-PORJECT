@@ -60,6 +60,7 @@ function shortestAngle(from,to){
 
     if(a===b && b===c){
       slot.qualified=true;
+
       if(a===3){
         slot.tier="LEGEND";
         slot.message="777 • LEGEND GATE";
@@ -125,6 +126,7 @@ function shortestAngle(from,to){
     slot.elapsed+=dt;
     const stopStarts=[1.00,1.48,1.96];
     const stopDuration=.46;
+
     slot.reels.forEach((reel,i)=>{
       if(reel.stopped)return;
       const local=slot.elapsed-stopStarts[i];
@@ -140,6 +142,7 @@ function shortestAngle(from,to){
         shake=Math.max(shake,3);
       }
     });
+
     if(slot.reels.every(r=>r.stopped)){
       slot.spinning=false;
       evaluateSlot();
@@ -163,6 +166,7 @@ function shortestAngle(from,to){
     crank.tier=tier;
     crank.message=tier+" • LEVEL 1";
     crank.outcome=chooseCrankOutcome();
+
     crank.stages.forEach((stage,i)=>{
       stage.diskAngle=Math.random()*Math.PI*2;
       stage.ballAngle=Math.random()*Math.PI*2;
@@ -173,6 +177,7 @@ function shortestAngle(from,to){
       stage.targetHole=pass ? 0 : 1+Math.floor(Math.random()*5);
       crank.targetHole[i]=stage.targetHole;
     });
+
     sound(145,.22,.06,"sawtooth");
     setTimeout(()=>sound(205,.14,.04,"square"),100);
     burst(425,470,"#69ffb5",26);
@@ -183,6 +188,7 @@ function shortestAngle(from,to){
     feature.mode="result";
     feature.transition=1.65;
     feature.cooldown=1.0;
+
     if(success){
       const finalReward=Math.round(crank.finalPrize*difficulties[difficulty].prize);
       score+=finalReward;
@@ -222,10 +228,12 @@ function shortestAngle(from,to){
       stage.diskAngle+=stage.speed*idleFactor*dt;
     });
     if(!crank.running)return;
+
     crank.timer+=dt;
     const stage=crank.stages[crank.stage];
     const settleStart=1.72;
     const resolveAt=2.72;
+
     if(crank.timer<settleStart){
       const orbitSpeed=5.8-crank.stage*.55;
       stage.ballAngle+=orbitSpeed*dt;
@@ -237,14 +245,17 @@ function shortestAngle(from,to){
       stage.orbit=Math.max(33,stage.orbit-22*dt);
       stage.speed*=Math.pow(.23,dt);
     }
+
     if(crank.timer>=resolveAt && !stage.resolved){
       stage.resolved=true;
       const passed=crank.outcome[crank.stage];
+
       if(passed){
         stage.ballAngle=stage.diskAngle;
         sound(690+crank.stage*130,.16,.055,"triangle");
         burst(425,485+crank.stage*104,"#69ffb5",34);
         shake=9;
+
         if(crank.stage===2){
           finishCrank(true);
         }else{
@@ -264,6 +275,7 @@ function shortestAngle(from,to){
 
   function updateFeature(dt){
     feature.cooldown=Math.max(0,feature.cooldown-dt);
+
     if(feature.mode==="slot"){
       updateSlot(dt);
       if(!slot.spinning && slot.evaluated && feature.transition>0){
