@@ -133,6 +133,7 @@ function releaseGoldenBallV6(sourceX=goldVaultV6.x,sourceY=goldVaultV6.y){
   return true;
 }
 
+// Replace ball update so moving mechanisms and golden scoring are part of physics.
 Ball.prototype.update=function(dt){
   this.multiplier=this.golden?10:(this.multiplier||1);
   this.age+=dt;this.lastHit-=dt;this.vy+=gravity*dt;
