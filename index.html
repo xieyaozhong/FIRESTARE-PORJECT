@@ -1,123 +1,334 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <meta name="theme-color" content="#111625" />
-  <meta name="description" content="結合物理彈珠、三軸老虎機與三層圓盤的原創網頁柏青哥遊戲。" />
-  <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-  <title>星火混合式柏青哥 V6.5｜周圍彈性撞擊版</title>
-  <link rel="stylesheet" href="./styles.css" />
-</head>
-<body>
-<div class="app">
-  <main class="machine">
-    <canvas id="game" width="900" height="1200" aria-label="柏青哥遊戲區"></canvas>
-  </main>
+"use strict";
 
-  <aside class="hud">
-    <div>
-      <div class="logo">星火 HYBRID PACHINKO</div>
-      <div class="sub">長按蓄力發射。上方保持完全開放，彈珠進入撞針區後會與周圍彈性撞擊物、旋轉撥輪、彈板及救球桿持續互動；擊中 GOLD LOCK 可釋放所有得分 ×10 的黃金彈珠。</div>
-    </div>
+function shortestAngle(from,to){
+    let d=(to-from+Math.PI)%(Math.PI*2)-Math.PI;
+    if(d<-Math.PI)d+=Math.PI*2;
+    return d;
+  }
 
-    <div class="card">
-      <div class="label">娛樂積分</div>
-      <div class="value" id="score">000000</div>
-      <div class="sub">最高紀錄：<b id="highScore">000000</b></div>
-    </div>
+  function chooseSlotResult(){
+    const boost=difficulties[difficulty].slotBoost*(fever.active?1.35:1);
+    const r=Math.random();
+    if(r<0.020*boost) return [3,3,3];
+    if(r<0.050*boost) return [5,5,5];
+    if(r<0.095*boost) return [4,4,4];
+    if(r<0.150*boost) return [2,2,2];
+    if(r<0.225*boost) return [1,1,1];
+    if(r<0.315*boost) return [0,0,0];
+    if(r<Math.min(.72,.610+(boost-1)*.18)){
+      const pair=Math.floor(Math.random()*slotSymbols.length);
+      const odd=(pair+1+Math.floor(Math.random()*(slotSymbols.length-1)))%slotSymbols.length;
+      const result=[pair,pair,odd];
+      result.sort(()=>Math.random()-.5);
+      return result;
+    }
+    return [0,0,0].map(()=>Math.floor(Math.random()*slotSymbols.length));
+  }
 
-    <div class="row">
-      <div class="card">
-        <div class="label">剩餘彈珠</div>
-        <div class="value small" id="balls">30</div>
-      </div>
-      <div class="card">
-        <div class="label">最高連擊</div>
-        <div class="value small" id="combo">0</div>
-      </div>
-    </div>
+  function startFeature(){
+    if(feature.mode!=="idle" || feature.cooldown>0)return;
+    feature.mode="slot";
+    feature.transition=0;
+    lifetime.starts++;
+    addFever(8);
+    if(lifetime.starts===1)unlock("first-start","第一次啟動 START");
+    checkMission();
+    saveProgress();
+    slot.spinning=true;
+    slot.evaluated=false;
+    slot.elapsed=0;
+    slot.qualified=false;
+    slot.tier="NONE";
+    slot.message="SPINNING";
+    slot.result=chooseSlotResult();
+    slot.reels.forEach((reel,i)=>{
+      reel.stopped=false;
+      reel.speed=16+i*3+Math.random()*2;
+      reel.pos=(reel.pos%slotSymbols.length+slotSymbols.length)%slotSymbols.length;
+    });
+    sound(170,.18,.055,"sawtooth");
+    setTimeout(()=>sound(245,.12,.035,"square"),90);
+    burst(425,280,"#ff5ea8",20);
+  }
 
-    <div class="card fever-card" id="feverCard">
-      <div class="label">FEVER 能量</div>
-      <div class="meter"><div class="fill fever-fill" id="feverFill"></div></div>
-      <div class="sub" id="feverText" style="margin-top:8px">0 / 100</div>
-    </div>
+  function evaluateSlot(){
+    if(slot.evaluated)return;
+    slot.evaluated=true;
+    const [a,b,c]=slot.result;
+    let immediate=20;
+    let extra=0;
 
-    <div class="card">
-      <div class="label">發射力道</div>
-      <div class="meter"><div class="fill" id="powerFill"></div></div>
-      <div class="sub" id="powerText" style="margin-top:8px">0%</div>
-    </div>
+    if(a===b && b===c){
+      slot.qualified=true;
 
-    <button class="launch" id="launchBtn">長按蓄力・放開發射</button>
+      if(a===3){
+        slot.tier="LEGEND";
+        slot.message="777 • LEGEND GATE";
+        crank.passChance=enhancedCrank([0.90,0.76,0.56]);
+        crank.finalPrize=6000;
+        crank.extraBalls=30;
+        immediate=1000;
+        extra=5;
+      }else if(a===5 || a===4){
+        slot.tier="GOLD";
+        slot.message=(a===5?"DIAMOND":"STAR")+" • GOLD GATE";
+        crank.passChance=enhancedCrank([0.83,0.66,0.43]);
+        crank.finalPrize=4500;
+        crank.extraBalls=22;
+        immediate=a===5?700:500;
+        extra=a===5?4:3;
+      }else{
+        slot.tier="SILVER";
+        slot.message=slotSymbols[a].name+" • SILVER GATE";
+        crank.passChance=enhancedCrank([0.75,0.56,0.34]);
+        crank.finalPrize=3200;
+        crank.extraBalls=16;
+        immediate=250;
+        extra=2;
+      }
+    }else if(a===b || b===c || a===c){
+      slot.qualified=true;
+      slot.tier="CHANCE";
+      slot.message="PAIR • CHANCE GATE";
+      crank.passChance=enhancedCrank([0.66,0.46,0.25]);
+      crank.finalPrize=2200;
+      crank.extraBalls=10;
+      immediate=80;
+      extra=1;
+    }else{
+      slot.qualified=false;
+      slot.tier="MISS";
+      slot.message="NO GATE  +20";
+      immediate=20;
+    }
 
-    <div class="row">
-      <button class="secondary" id="autoBtn">自動發射：關</button>
-      <button class="secondary" id="soundBtn">音效：開</button>
-    </div>
+    immediate=Math.round(immediate*difficulties[difficulty].prize);
+    score+=immediate;
+    ballsLeft+=extra;
+    addFever(Math.min(18,immediate/55));
+    feature.tier=slot.tier;
+    feature.transition=1.25;
+    checkMission();
+    updateHUD();
 
-    <div class="row">
-      <button class="secondary" id="addBtn">補充 10 顆</button>
-      <button class="secondary" id="fullscreenBtn">全螢幕</button>
-    </div>
+    if(slot.qualified){
+      sound(slot.tier==="LEGEND"?1050:720,.22,.06,"square");
+      burst(425,305,slot.tier==="LEGEND"?"#ff3d7f":"#ffd66b",slot.tier==="LEGEND"?55:30);
+      shake=slot.tier==="LEGEND"?12:7;
+    }else{
+      sound(220,.22,.035,"sawtooth");
+      shake=4;
+    }
+  }
 
-    <div class="card">
-      <div class="label">遊戲難度</div>
-      <select id="difficultySelect" class="control" aria-label="遊戲難度">
-        <option value="casual">休閒：較容易進入大獎</option>
-        <option value="classic" selected>經典：標準機率</option>
-        <option value="extreme">極限：速度更快、獎勵更高</option>
-      </select>
-    </div>
+  function updateSlot(dt){
+    if(!slot.spinning)return;
+    slot.elapsed+=dt;
+    const stopStarts=[1.00,1.48,1.96];
+    const stopDuration=.46;
 
-    <div class="card">
-      <div class="label">本次挑戰任務</div>
-      <div class="mission" id="missionText">啟動 START 3 次</div>
-      <div class="meter"><div class="fill" id="missionFill"></div></div>
-    </div>
+    slot.reels.forEach((reel,i)=>{
+      if(reel.stopped)return;
+      const local=slot.elapsed-stopStarts[i];
+      if(local<0){
+        reel.pos+=reel.speed*dt;
+      }else if(local<stopDuration){
+        const t=local/stopDuration;
+        reel.pos+=reel.speed*(1-t)*(1-t)*dt;
+      }else{
+        reel.pos=slot.result[i];
+        reel.stopped=true;
+        sound(340+i*105,.08,.04,"square");
+        shake=Math.max(shake,3);
+      }
+    });
 
-    <div class="card">
-      <div class="label">生涯統計</div>
-      <div class="stats">
-        <div class="stat"><b id="launchStat">0</b><small>發射</small></div>
-        <div class="stat"><b id="startStat">0</b><small>START</small></div>
-        <div class="stat"><b id="jackpotStat">0</b><small>大獎</small></div>
-      </div>
-    </div>
+    if(slot.reels.every(r=>r.stopped)){
+      slot.spinning=false;
+      evaluateSlot();
+    }
+  }
 
-    <div class="card combo-guide">
-      <div class="label">拉霸機 × 轉盤連動</div>
-      <div class="combo-row"><b>777</b><span>增加 GO 洞、轉盤減速、最高大獎</span></div>
-      <div class="combo-row"><b>💎 / ★</b><span>多重 GO 洞，鑽石重置黃金鎖</span></div>
-      <div class="combo-row"><b>BAR</b><span>擋板與撥輪進入機械增壓</span></div>
-      <div class="combo-row"><b>🔔 / 🍒</b><span>額外彈珠或降低前段難度</span></div>
-      <div class="combo-row"><b>混合圖案</b><span>皇家與經典組合有專屬路線</span></div>
-    </div>
+  function chooseCrankOutcome(){
+    const result=[false,false,false];
+    result[0]=Math.random()<crank.passChance[0];
+    result[1]=result[0] && Math.random()<crank.passChance[1];
+    result[2]=result[1] && Math.random()<crank.passChance[2];
+    return result;
+  }
 
-    <button class="secondary" id="resetBtn">重新開始本局</button>
+  function startCrank(tier){
+    feature.mode="crank";
+    feature.transition=0;
+    crank.running=true;
+    crank.stage=0;
+    crank.timer=0;
+    crank.tier=tier;
+    crank.message=tier+" • LEVEL 1";
+    crank.outcome=chooseCrankOutcome();
 
-    <div class="card legend">
-      <span><i class="dot" style="color:#59e7ff;background:#59e7ff"></i>一般獎洞：10～50 分</span>
-      <span><i class="dot" style="color:#ffd66b;background:#ffd66b"></i>黃金彈珠：所有得分與大獎 ×10</span>
-      <span><i class="dot" style="color:#69ffb5;background:#69ffb5"></i>周圍彈性撞擊物：將彈珠送回撞針區</span>
-      <span><i class="dot" style="color:#ff5ea8;background:#ff5ea8"></i>START：圖案組合改變轉盤規則</span>
-    </div>
+    crank.stages.forEach((stage,i)=>{
+      stage.diskAngle=Math.random()*Math.PI*2;
+      stage.ballAngle=Math.random()*Math.PI*2;
+      stage.orbit=70+i*7;
+      stage.speed=(i%2===0?1:-1)*(1.78-i*.23);
+      stage.resolved=false;
+      const pass=crank.outcome[i];
+      stage.targetHole=pass ? 0 : 1+Math.floor(Math.random()*5);
+      crank.targetHole[i]=stage.targetHole;
+    });
 
-    <div class="notice">純娛樂物理模擬，積分不具現金價值。空白鍵蓄力、A 鍵自動發射、M 鍵音效、F 鍵全螢幕。紀錄會保存在這台裝置。</div>
-  </aside>
-</div>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
+    sound(145,.22,.06,"sawtooth");
+    setTimeout(()=>sound(205,.14,.04,"square"),100);
+    burst(425,470,"#69ffb5",26);
+  }
 
-<script src="./state.js" defer></script>
-<script src="./features.js" defer></script>
-<script src="./controls.js" defer></script>
-<script src="./render-board.js" defer></script>
-<script src="./render-feature.js" defer></script>
-<script src="./v6-upgrade.js" defer></script>
-<script src="./v6-containment-fix.js" defer></script>
-<script src="./v6-perimeter-rebound.js" defer></script>
-<script src="./main.js" defer></script>
-</body>
-</html>
+  function finishCrank(success,failedStage=2){
+    crank.running=false;
+    feature.mode="result";
+    feature.transition=1.65;
+    feature.cooldown=1.0;
+
+    if(success){
+      const finalReward=Math.round(crank.finalPrize*difficulties[difficulty].prize);
+      score+=finalReward;
+      ballsLeft+=crank.extraBalls;
+      crank.finalPrize=finalReward;
+      lifetime.jackpots++;
+      addFever(30);
+      unlock("first-jackpot","第一次完成三層 JACKPOT");
+      checkMission();
+      saveProgress();
+      crank.message=`${crank.tier} JACKPOT +${crank.finalPrize}`;
+      jackpotFlash=3.2;
+      shake=17;
+      burst(425,620,crank.tier==="LEGEND"?"#ff2d75":"#ffd66b",110);
+      sound(784,.25,.075,"square");
+      setTimeout(()=>sound(1046,.28,.07,"square"),100);
+      setTimeout(()=>sound(1318,.35,.065,"square"),220);
+      setTimeout(()=>sound(1568,.42,.06,"square"),350);
+    }else{
+      const base=[40,180,650];
+      const multiplier=crank.tier==="LEGEND"?2:crank.tier==="GOLD"?1.5:1;
+      const prize=Math.round(base[failedStage]*multiplier);
+      const extras=[0,1,4];
+      score+=prize;
+      ballsLeft+=extras[failedStage];
+      crank.message=`LEVEL ${failedStage+1} MISS +${prize}`;
+      shake=7+failedStage*2;
+      burst(425,485+failedStage*104,"#ffd66b",24+failedStage*12);
+      sound(260-failedStage*25,.24,.045,"sawtooth");
+    }
+    updateHUD();
+  }
+
+  function updateCrank(dt){
+    crank.stages.forEach((stage,i)=>{
+      const idleFactor=crank.running ? 1 : .24;
+      stage.diskAngle+=stage.speed*idleFactor*dt;
+    });
+    if(!crank.running)return;
+
+    crank.timer+=dt;
+    const stage=crank.stages[crank.stage];
+    const settleStart=1.72;
+    const resolveAt=2.72;
+
+    if(crank.timer<settleStart){
+      const orbitSpeed=5.8-crank.stage*.55;
+      stage.ballAngle+=orbitSpeed*dt;
+      stage.orbit=Math.max(42,stage.orbit-10.8*dt);
+    }else{
+      const targetWorld=stage.diskAngle+stage.targetHole*(Math.PI*2/6);
+      const pull=Math.min(1,(crank.timer-settleStart)/(resolveAt-settleStart));
+      stage.ballAngle+=shortestAngle(stage.ballAngle,targetWorld)*dt*(2.9+pull*8.6);
+      stage.orbit=Math.max(33,stage.orbit-22*dt);
+      stage.speed*=Math.pow(.23,dt);
+    }
+
+    if(crank.timer>=resolveAt && !stage.resolved){
+      stage.resolved=true;
+      const passed=crank.outcome[crank.stage];
+
+      if(passed){
+        stage.ballAngle=stage.diskAngle;
+        sound(690+crank.stage*130,.16,.055,"triangle");
+        burst(425,485+crank.stage*104,"#69ffb5",34);
+        shake=9;
+
+        if(crank.stage===2){
+          finishCrank(true);
+        }else{
+          crank.stage++;
+          crank.timer=0;
+          crank.message=crank.stage===2 ? crank.tier+" • FINAL" : crank.tier+` • LEVEL ${crank.stage+1}`;
+          const next=crank.stages[crank.stage];
+          next.ballAngle=Math.random()*Math.PI*2;
+          next.orbit=70+crank.stage*7;
+          setTimeout(()=>sound(410+crank.stage*100,.12,.04,"square"),80);
+        }
+      }else{
+        finishCrank(false,crank.stage);
+      }
+    }
+  }
+
+  function updateFeature(dt){
+    feature.cooldown=Math.max(0,feature.cooldown-dt);
+
+    if(feature.mode==="slot"){
+      updateSlot(dt);
+      if(!slot.spinning && slot.evaluated && feature.transition>0){
+        feature.transition-=dt;
+        if(feature.transition<=0){
+          if(slot.qualified){
+            startCrank(slot.tier);
+          }else{
+            feature.mode="idle";
+            feature.cooldown=.75;
+            slot.message="HIT START";
+          }
+        }
+      }
+    }else if(feature.mode==="crank"){
+      updateCrank(dt);
+    }else{
+      updateCrank(dt);
+      if(feature.mode==="result" && feature.transition>0){
+        feature.transition-=dt;
+        if(feature.transition<=0){
+          feature.mode="idle";
+          slot.message="HIT START";
+          crank.message="WAITING";
+        }
+      }
+    }
+  }
+
+  function award(pocket,x,y){
+    if(pocket.slot){
+      score+=25;
+      activeCombo=0;
+      shake=6;
+      burst(x,y,"#ff5ea8",24);
+      startFeature();
+      updateHUD();
+      return;
+    }
+    score += Math.round(pocket.value*difficulties[difficulty].prize);
+    addFever(Math.max(1,pocket.value/18));
+    activeCombo=0;
+    shake = pocket.value>=100 ? 9 : 4;
+    if(pocket.value===500){
+      jackpotFlash=2.2;
+      sound(880,.22,.07,"square");
+      setTimeout(()=>sound(1175,.25,.06,"square"),90);
+      setTimeout(()=>sound(1568,.32,.05,"square"),180);
+      burst(x,y,"#ff5ea8",50);
+    }else{
+      sound(520+pocket.value*2,.12,.04,"sine");
+      burst(x,y,pocket.value>=100?"#ffd66b":"#59e7ff",18);
+    }
+    checkMission();
+    updateHUD();
+  }

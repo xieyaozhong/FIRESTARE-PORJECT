@@ -26,25 +26,33 @@ buildBoard=function(){
   // Elastic objects placed around the perimeter. The central reel/crank module,
   // golden lock, START target, and lower score lanes remain unobstructed.
   const layout=[
+    // upper corners and shoulders
     {x:112,y:252,r:19,power:1.18,label:"",color:0},
     {x:170,y:205,r:17,power:1.16,label:"",color:2},
     {x:694,y:235,r:18,power:1.18,label:"",color:1},
     {x:735,y:300,r:20,power:1.20,label:"",color:3},
+
+    // left wall rebound chain
     {x:105,y:360,r:21,power:1.22,label:"",color:1},
     {x:106,y:485,r:20,power:1.20,label:"",color:0},
     {x:107,y:615,r:22,power:1.23,label:"",color:2},
     {x:110,y:750,r:21,power:1.22,label:"",color:3},
     {x:145,y:850,r:23,power:1.25,label:"L",color:1},
+
+    // right wall rebound chain, clear of launch lane divider
     {x:730,y:410,r:20,power:1.20,label:"",color:2},
     {x:731,y:535,r:21,power:1.22,label:"",color:0},
     {x:730,y:660,r:22,power:1.23,label:"",color:1},
     {x:724,y:790,r:21,power:1.22,label:"",color:3},
     {x:690,y:858,r:23,power:1.25,label:"R",color:0},
+
+    // lower shoulder rebounds, above the scoring pockets
     {x:220,y:875,r:18,power:1.17,label:"",color:2},
     {x:630,y:875,r:18,power:1.17,label:"",color:2}
   ];
 
   for(const item of layout){
+    // Remove nearby nails so the new elastic objects have clean collision space.
     for(let i=pins.length-1;i>=0;i--){
       if(Math.hypot(pins[i].x-item.x,pins[i].y-item.y)<item.r+18)pins.splice(i,1);
     }
@@ -55,6 +63,7 @@ buildBoard=function(){
     });
   }
 };
+
 
 // Keep the full strength range, but raise the minimum launch impulse enough for
 // even a light press to complete the original curved launch rail.
@@ -118,6 +127,7 @@ function drawPerimeterGuideV65(){
   ctx.fillText("OPEN PIN FIELD",584,153);
   ctx.shadowBlur=0;
 
+  // Small arrows indicate the open entry rather than drawing a blocking roof.
   for(let i=0;i<3;i++){
     const x=610-i*22,y=168+i*16;
     ctx.strokeStyle="#8beaff";

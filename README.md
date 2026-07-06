@@ -1,24 +1,64 @@
-# 星火混合式柏青哥 V6.5
+"use strict";
 
-以 V6 機械裝置與黃金彈珠版為核心，移除上方阻擋式擋板，改用分布於左右與下半部的彈性撞擊物維持彈珠互動。
+// ---------- Loop ----------
+  function physicsStep(dt){
+    if(toastTimer>0){
+      toastTimer-=dt;
+      if(toastTimer<=0)toastEl.classList.remove("show");
+    }
+    if(fever.active){
+      fever.timer-=dt;
+      if(fever.timer<=0){
+        fever.active=false;fever.timer=0;fever.value=0;
+        showToast("FEVER 結束");
+      }
+    }
+    if(autoFire && !charging && ballsLeft>0 && balls.filter(b=>b.alive).length<MAX_BALLS_ON_BOARD){
+      autoTimer-=dt;
+      if(autoTimer<=0){
+        charge=.52+Math.random()*.42;
+        launch();
+        autoTimer=.55+Math.random()*.50;
+      }
+    }
+    if(charging){
+      charge += chargeDirection*dt*.72;
+      if(charge>=1){charge=1;chargeDirection=-1;}
+      if(charge<=0){charge=0;chargeDirection=1;}
+    }
+    powerFill.style.width=(charge*100).toFixed(0)+"%";
+    powerText.textContent=(charge*100).toFixed(0)+"%";
+    lampPhase+=dt;
+    jackpotFlash=Math.max(0,jackpotFlash-dt);
+    updateFeature(dt);
+    shake*=Math.pow(.03,dt);
+    if(Math.floor(lampPhase*10)!==Math.floor((lampPhase-dt)*10))updateHUD();
+    for(const b of balls)if(b.alive)b.update(dt);
+    for(let i=balls.length-1;i>=0;i--)if(!balls[i].alive)balls.splice(i,1);
+    updateParticles(dt);
+  }
 
-## V6.5 改動
+  function frame(now){
+    const delta=Math.min(.035,(now-lastTime)/1000);
+    lastTime=now;accumulator+=delta;
+    while(accumulator>=FIXED_DT){
+      physicsStep(FIXED_DT);
+      accumulator-=FIXED_DT;
+    }
 
-- 移除上方長擋板、彈力屋頂與可見安全籠線段。
-- 上方發射出口保持開放，只保留兩段短導流唇片。
-- 左右周圍新增 16 顆彈性撞擊物，將偏離中央的彈珠反彈回撞針區。
-- 新撞擊物採不同尺寸、彈力與燈色，避免反彈節奏過於規律。
-- 清除撞擊物附近的重疊撞針，讓碰撞更穩定。
-- 保留旋轉撥輪、自動彈板、移動救球桿、黃金彈珠 ×10、拉霸與三層轉盤連動。
-- 保留高速子步進與位置回復，避免彈珠穿出機台。
+    ctx.save();
+    const sx=(Math.random()-.5)*shake, sy=(Math.random()-.5)*shake;
+    ctx.translate(sx,sy);
+    drawBoard();drawBalls();drawParticles();drawOverlay();
+    ctx.restore();
 
-## 操作
+    requestAnimationFrame(frame);
+  }
 
-- 手機／平板：長按發射按鈕蓄力，放開發射。
-- 電腦：按住空白鍵蓄力；`A` 自動發射；`M` 音效；`F` 全螢幕。
-
-## 部署
-
-所有檔案放在 GitHub Pages 儲存庫根目錄即可。專案已包含 GitHub Actions Pages 工作流程。
-
-本遊戲僅供物理模擬與娛樂展示，所有積分不具現金價值。
+  safeLoad();
+  buildBoard();
+  updateHUD();
+  if("serviceWorker" in navigator){
+    window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+  }
+  requestAnimationFrame(frame);
