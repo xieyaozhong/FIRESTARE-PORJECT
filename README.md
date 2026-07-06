@@ -1,79 +1,64 @@
-# 星火太空任務柏青哥 V6.4
+"use strict";
 
-一款不需安裝套件、可直接在瀏覽器遊玩的原創柏青哥模擬遊戲，將物理彈珠、三軸老虎機和三層機械圓盤整合成同一套流程。
+// ---------- Loop ----------
+  function physicsStep(dt){
+    if(toastTimer>0){
+      toastTimer-=dt;
+      if(toastTimer<=0)toastEl.classList.remove("show");
+    }
+    if(fever.active){
+      fever.timer-=dt;
+      if(fever.timer<=0){
+        fever.active=false;fever.timer=0;fever.value=0;
+        showToast("FEVER 結束");
+      }
+    }
+    if(autoFire && !charging && ballsLeft>0 && balls.filter(b=>b.alive).length<MAX_BALLS_ON_BOARD){
+      autoTimer-=dt;
+      if(autoTimer<=0){
+        charge=.52+Math.random()*.42;
+        launch();
+        autoTimer=.55+Math.random()*.50;
+      }
+    }
+    if(charging){
+      charge += chargeDirection*dt*.72;
+      if(charge>=1){charge=1;chargeDirection=-1;}
+      if(charge<=0){charge=0;chargeDirection=1;}
+    }
+    powerFill.style.width=(charge*100).toFixed(0)+"%";
+    powerText.textContent=(charge*100).toFixed(0)+"%";
+    lampPhase+=dt;
+    jackpotFlash=Math.max(0,jackpotFlash-dt);
+    updateFeature(dt);
+    shake*=Math.pow(.03,dt);
+    if(Math.floor(lampPhase*10)!==Math.floor((lampPhase-dt)*10))updateHUD();
+    for(const b of balls)if(b.alive)b.update(dt);
+    for(let i=balls.length-1;i>=0;i--)if(!balls[i].alive)balls.splice(i,1);
+    updateParticles(dt);
+  }
 
-## 線上玩法流程
+  function frame(now){
+    const delta=Math.min(.035,(now-lastTime)/1000);
+    lastTime=now;accumulator+=delta;
+    while(accumulator>=FIXED_DT){
+      physicsStep(FIXED_DT);
+      accumulator-=FIXED_DT;
+    }
 
-1. 長按蓄力，放開後發射彈珠。
-2. 彈珠沿封閉式發射槽進入撞針區。
-3. 撞擊釘子、彈力盤、旋轉撥輪與任務目標。
-4. 命中 `START` 後啟動三軸老虎機。
-5. 老虎機結果決定三層圓盤的 GO 洞數量、速度、通關率與獎勵。
-6. 命中 `GOLD LOCK` 可釋放得分 10 倍的黃金彈珠。
-7. 依照右側任務電腦完成任務並提升軍階。
+    ctx.save();
+    const sx=(Math.random()-.5)*shake, sy=(Math.random()-.5)*shake;
+    ctx.translate(sx,sy);
+    drawBoard();drawBalls();drawParticles();drawOverlay();
+    ctx.restore();
 
-## 核心功能
+    requestAnimationFrame(frame);
+  }
 
-- **FEVER 多球模式**：能量滿 100 後維持 12 秒，每次發射變成三球。
-- **三種難度**：休閒、經典、極限。
-- **自動發射、任務、成就與本機保存**。
-- **全螢幕與鍵盤操作**。
-- **PWA 離線支援與 GitHub Pages 自動部署**。
-
-## V6 機械與黃金彈珠
-
-- 左右旋轉撥輪、自動彈力擋板、移動救球桿與側邊回流軌。
-- `GOLD LOCK` 會釋放黃金彈珠。
-- 黃金彈珠的得分槽、START、拉霸即時獎勵及三層轉盤獎勵均為 10 倍。
-- 777、鑽石、星星、BAR、鈴鐺、櫻桃、對子及特殊混合組合，會套用不同轉盤規則與機械效果。
-
-## V6.1 防飛出修正
-
-- 高速彈珠拆分成最多 6 個物理子步驟，避免單幀穿越牆體。
-- 機台外圍加入不可見安全籠與位置回復機制。
-- 限制極端碰撞速度，但保留正常彈力與機械互動。
-
-## V6.3 100% 撞針入口布局
-
-- 發射入口重新設計為封閉式金屬導流槽。
-- 導流槽出口固定對準右側第一排撞針。
-- 新增單向落球喉道與專用入口撞針。
-- 玩家發射的每一顆彈珠都會先進入撞針區。
-- 若彈珠在入口停留過久，槽內餵球閘會自動送入撞針區。
-
-## V6.4 復古太空任務設計
-
-- 參考經典 1990 年代太空彈珠台的資訊架構，以原創素材重新設計。
-- 左側保留完整物理球台，右側改為黑底紫色點陣任務電腦。
-- 球台加入星空紋理、紅色金屬軌、彩色方向箭頭、中央發光反應爐、任務目標燈與下方三角彈板外觀。
-- 新增軍階顯示：Cadet、Ensign、Lieutenant、Commander、Star Captain。
-- 新增四階段任務循環：點亮三個任務目標、啟動 START、開啟 GOLD LOCK、完成三層轉盤。
-- 任務完成會獲得額外分數與彈珠，右側任務電腦會顯示下一個目標。
-- 不使用參考遊戲的圖像或音效素材，只採用球台與任務面板的分區概念。
-
-## 操作
-
-| 操作 | 手機／平板 | 電腦 |
-|---|---|---|
-| 蓄力發射 | 長按發射按鈕 | 按住空白鍵 |
-| 自動發射 | 點擊按鈕 | `A` |
-| 音效 | 點擊按鈕 | `M` |
-| 全螢幕 | 點擊按鈕 | `F` |
-
-## 本機執行
-
-直接開啟 `index.html` 即可。Service Worker 離線功能需要透過 HTTP 伺服器執行，例如：
-
-```bash
-python -m http.server 8000
-```
-
-然後開啟 `http://localhost:8000`。
-
-## GitHub Pages
-
-專案內已包含 `.github/workflows/deploy-pages.yml`。在儲存庫設定中將 **Settings → Pages → Source** 設為 **GitHub Actions**，之後每次推送到 `main` 都會自動更新網站。
-
-## 使用聲明
-
-本遊戲僅供程式設計、物理模擬與娛樂展示，所有分數皆不具現金價值。
+  safeLoad();
+  buildBoard();
+  updateHUD();
+  if("serviceWorker" in navigator){
+    window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+  }
+  requestAnimationFrame(frame);

@@ -1,64 +1,136 @@
-"use strict";
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#111625" />
+  <meta name="description" content="結合物理彈珠、三軸老虎機與三層圓盤的原創網頁柏青哥遊戲。" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <title>星火太空任務柏青哥 V6.4｜復古太空彈珠台</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./space-cadet-theme.css" />
+</head>
+<body>
+<div class="app">
+  <main class="machine">
+    <canvas id="game" width="900" height="1200" aria-label="柏青哥遊戲區"></canvas>
+  </main>
 
-// ---------- Loop ----------
-  function physicsStep(dt){
-    if(toastTimer>0){
-      toastTimer-=dt;
-      if(toastTimer<=0)toastEl.classList.remove("show");
-    }
-    if(fever.active){
-      fever.timer-=dt;
-      if(fever.timer<=0){
-        fever.active=false;fever.timer=0;fever.value=0;
-        showToast("FEVER 結束");
-      }
-    }
-    if(autoFire && !charging && ballsLeft>0 && balls.filter(b=>b.alive).length<MAX_BALLS_ON_BOARD){
-      autoTimer-=dt;
-      if(autoTimer<=0){
-        charge=.52+Math.random()*.42;
-        launch();
-        autoTimer=.55+Math.random()*.50;
-      }
-    }
-    if(charging){
-      charge += chargeDirection*dt*.72;
-      if(charge>=1){charge=1;chargeDirection=-1;}
-      if(charge<=0){charge=0;chargeDirection=1;}
-    }
-    powerFill.style.width=(charge*100).toFixed(0)+"%";
-    powerText.textContent=(charge*100).toFixed(0)+"%";
-    lampPhase+=dt;
-    jackpotFlash=Math.max(0,jackpotFlash-dt);
-    updateFeature(dt);
-    shake*=Math.pow(.03,dt);
-    if(Math.floor(lampPhase*10)!==Math.floor((lampPhase-dt)*10))updateHUD();
-    for(const b of balls)if(b.alive)b.update(dt);
-    for(let i=balls.length-1;i>=0;i--)if(!balls[i].alive)balls.splice(i,1);
-    updateParticles(dt);
-  }
+  <aside class="hud">
+    <div>
+      <div class="logo">STARCADE HYBRID PINBALL</div>
+      <div class="sub">原創復古太空任務彈珠台。封閉式發射槽確保每球先進入撞針區；依照右側任務電腦的指示點亮目標、啟動拉霸、解鎖黃金彈珠並挑戰三層轉盤。</div>
+    </div>
 
-  function frame(now){
-    const delta=Math.min(.035,(now-lastTime)/1000);
-    lastTime=now;accumulator+=delta;
-    while(accumulator>=FIXED_DT){
-      physicsStep(FIXED_DT);
-      accumulator-=FIXED_DT;
-    }
+    <div class="card">
+      <div class="label">娛樂積分</div>
+      <div class="value" id="score">000000</div>
+      <div class="sub">最高紀錄：<b id="highScore">000000</b></div>
+    </div>
 
-    ctx.save();
-    const sx=(Math.random()-.5)*shake, sy=(Math.random()-.5)*shake;
-    ctx.translate(sx,sy);
-    drawBoard();drawBalls();drawParticles();drawOverlay();
-    ctx.restore();
+    <div class="card space-dmd-card">
+      <div class="space-dmd-title">MISSION COMPUTER</div>
+      <div class="space-dmd" id="spaceMissionStatus">HIT THE THREE MISSION TARGETS</div>
+      <div class="space-rank-row">
+        <div class="space-rank-box"><small>MISSION</small><b id="spaceMissionTitle">SELECT MISSION</b></div>
+        <div class="space-rank-box"><small>RANK</small><b id="spaceRankStatus">CADET</b></div>
+      </div>
+      <div class="space-dmd small" id="spaceBonusStatus" style="margin-top:7px">MISSION 1 BONUS 700</div>
+    </div>
 
-    requestAnimationFrame(frame);
-  }
+    <div class="row">
+      <div class="card">
+        <div class="label">剩餘彈珠</div>
+        <div class="value small" id="balls">30</div>
+      </div>
+      <div class="card">
+        <div class="label">最高連擊</div>
+        <div class="value small" id="combo">0</div>
+      </div>
+    </div>
 
-  safeLoad();
-  buildBoard();
-  updateHUD();
-  if("serviceWorker" in navigator){
-    window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
-  }
-  requestAnimationFrame(frame);
+    <div class="card fever-card" id="feverCard">
+      <div class="label">FEVER 能量</div>
+      <div class="meter"><div class="fill fever-fill" id="feverFill"></div></div>
+      <div class="sub" id="feverText" style="margin-top:8px">0 / 100</div>
+    </div>
+
+    <div class="card">
+      <div class="label">發射力道</div>
+      <div class="meter"><div class="fill" id="powerFill"></div></div>
+      <div class="sub" id="powerText" style="margin-top:8px">0%</div>
+    </div>
+
+    <button class="launch" id="launchBtn">長按蓄力・放開發射</button>
+
+    <div class="row">
+      <button class="secondary" id="autoBtn">自動發射：關</button>
+      <button class="secondary" id="soundBtn">音效：開</button>
+    </div>
+
+    <div class="row">
+      <button class="secondary" id="addBtn">補充 10 顆</button>
+      <button class="secondary" id="fullscreenBtn">全螢幕</button>
+    </div>
+
+    <div class="card">
+      <div class="label">遊戲難度</div>
+      <select id="difficultySelect" class="control" aria-label="遊戲難度">
+        <option value="casual">休閒：較容易進入大獎</option>
+        <option value="classic" selected>經典：標準機率</option>
+        <option value="extreme">極限：速度更快、獎勵更高</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="label">本次挑戰任務</div>
+      <div class="mission" id="missionText">啟動 START 3 次</div>
+      <div class="meter"><div class="fill" id="missionFill"></div></div>
+    </div>
+
+    <div class="card">
+      <div class="label">生涯統計</div>
+      <div class="stats">
+        <div class="stat"><b id="launchStat">0</b><small>發射</small></div>
+        <div class="stat"><b id="startStat">0</b><small>START</small></div>
+        <div class="stat"><b id="jackpotStat">0</b><small>大獎</small></div>
+      </div>
+    </div>
+
+    <div class="card combo-guide">
+      <div class="label">拉霸機 × 轉盤連動</div>
+      <div class="combo-row"><b>777</b><span>增加 GO 洞、轉盤減速、最高大獎</span></div>
+      <div class="combo-row"><b>💎 / ★</b><span>多重 GO 洞，鑽石重置黃金鎖</span></div>
+      <div class="combo-row"><b>BAR</b><span>擋板與撥輪進入機械增壓</span></div>
+      <div class="combo-row"><b>🔔 / 🍒</b><span>額外彈珠或降低前段難度</span></div>
+      <div class="combo-row"><b>混合圖案</b><span>皇家與經典組合有專屬路線</span></div>
+    </div>
+
+    <button class="secondary" id="resetBtn">重新開始本局</button>
+
+    <div class="card legend">
+      <span><i class="dot" style="color:#59e7ff;background:#59e7ff"></i>一般獎洞：10～50 分</span>
+      <span><i class="dot" style="color:#ffd66b;background:#ffd66b"></i>黃金彈珠：所有得分與大獎 ×10</span>
+      <span><i class="dot" style="color:#69ffb5;background:#69ffb5"></i>機械裝置：撥輪、彈板與救球桿</span>
+      <span><i class="dot" style="color:#ff5ea8;background:#ff5ea8"></i>START：圖案組合改變轉盤規則</span>
+    </div>
+
+    <div class="notice">純娛樂物理模擬，積分不具現金價值。空白鍵蓄力、A 鍵自動發射、M 鍵音效、F 鍵全螢幕。紀錄會保存在這台裝置。</div>
+  </aside>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="./state.js" defer></script>
+<script src="./features.js" defer></script>
+<script src="./controls.js" defer></script>
+<script src="./render-board.js" defer></script>
+<script src="./render-feature.js" defer></script>
+<script src="./v6-upgrade.js" defer></script>
+<script src="./v6-containment-fix.js" defer></script>
+<script src="./v6-entry-routing-fix.js" defer></script>
+<script src="./v6-layout-overhaul.js" defer></script>
+<script src="./v6-space-cadet-theme.js" defer></script>
+<script src="./main.js" defer></script>
+</body>
+</html>

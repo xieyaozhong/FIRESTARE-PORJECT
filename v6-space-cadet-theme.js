@@ -137,6 +137,7 @@ function drawTriangleInsertV64(x,y,angle,color,on=true){
 function drawSpaceTableOverlayV64(){
   ctx.save();
 
+  // Subtle starfield and circuit traces on the playfield.
   for(let i=0;i<76;i++){
     const x=86+(i*97%650),y=178+(i*173%690);
     if(x>250&&x<610&&y<815)continue;
@@ -147,6 +148,7 @@ function drawSpaceTableOverlayV64(){
   }
   ctx.globalAlpha=1;
 
+  // Red metallic orbit rails along both outer playfield edges.
   ctx.lineCap="round";
   ctx.strokeStyle="#5b1024";ctx.lineWidth=18;ctx.shadowColor="#ff456b";ctx.shadowBlur=9;
   ctx.beginPath();ctx.moveTo(91,250);ctx.bezierCurveTo(72,410,78,680,104,868);ctx.stroke();
@@ -156,6 +158,7 @@ function drawSpaceTableOverlayV64(){
   ctx.beginPath();ctx.moveTo(744,332);ctx.bezierCurveTo(770,470,766,690,738,868);ctx.stroke();
   ctx.shadowBlur=0;
 
+  // Mission target bank housing.
   const bank=ctx.createLinearGradient(80,350,150,515);
   bank.addColorStop(0,"#b9c3d4");bank.addColorStop(.18,"#313a4c");bank.addColorStop(1,"#090c14");
   ctx.fillStyle=bank;ctx.beginPath();ctx.roundRect(82,348,61,171,14);ctx.fill();
@@ -171,6 +174,7 @@ function drawSpaceTableOverlayV64(){
   });
   ctx.shadowBlur=0;
 
+  // Central reactor around START.
   ctx.save();ctx.translate(425,850);
   const reactor=ctx.createRadialGradient(-12,-16,5,0,0,72);
   reactor.addColorStop(0,"#d7fbff");reactor.addColorStop(.2,"#34aed5");reactor.addColorStop(.56,"#123d74");reactor.addColorStop(1,"#040813");
@@ -186,6 +190,7 @@ function drawSpaceTableOverlayV64(){
   }
   ctx.restore();ctx.shadowBlur=0;
 
+  // Slingshot panels behind the flippers.
   for(const side of [-1,1]){
     const cx=side<0?183:667;
     ctx.fillStyle="#070a12";ctx.strokeStyle="#ec4365";ctx.lineWidth=4;
@@ -197,12 +202,14 @@ function drawSpaceTableOverlayV64(){
     ctx.beginPath();ctx.moveTo(cx-22*side,843);ctx.lineTo(cx+17*side,809);ctx.lineTo(cx+6*side,866);ctx.stroke();
   }
 
+  // Directional inserts point toward missions and the reactor.
   const arrows=[
     [170,555,-.25,"#ffe35e"],[210,605,-.18,"#ffe35e"],[680,560,.22,"#5ee7ff"],
     [655,615,.15,"#5ee7ff"],[335,820,-.35,"#ff5c8b"],[515,820,.35,"#ff5c8b"]
   ];
   arrows.forEach((a,i)=>drawTriangleInsertV64(a[0],a[1],a[2],a[3],(i+Math.floor(lampPhase*4))%3!==0));
 
+  // Rank ladder lights across the top-left playfield.
   ctx.font="900 8px system-ui";ctx.textAlign="center";
   ["C","E","L","C","S"].forEach((label,i)=>{
     const x=126+i*25,y=215;
