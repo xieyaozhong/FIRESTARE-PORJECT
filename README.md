@@ -1,64 +1,30 @@
-"use strict";
+# 星火混合式柏青哥 V6.6｜寫實沼澤風機台版
 
-// ---------- Loop ----------
-  function physicsStep(dt){
-    if(toastTimer>0){
-      toastTimer-=dt;
-      if(toastTimer<=0)toastEl.classList.remove("show");
-    }
-    if(fever.active){
-      fever.timer-=dt;
-      if(fever.timer<=0){
-        fever.active=false;fever.timer=0;fever.value=0;
-        showToast("FEVER 結束");
-      }
-    }
-    if(autoFire && !charging && ballsLeft>0 && balls.filter(b=>b.alive).length<MAX_BALLS_ON_BOARD){
-      autoTimer-=dt;
-      if(autoTimer<=0){
-        charge=.52+Math.random()*.42;
-        launch();
-        autoTimer=.55+Math.random()*.50;
-      }
-    }
-    if(charging){
-      charge += chargeDirection*dt*.72;
-      if(charge>=1){charge=1;chargeDirection=-1;}
-      if(charge<=0){charge=0;chargeDirection=1;}
-    }
-    powerFill.style.width=(charge*100).toFixed(0)+"%";
-    powerText.textContent=(charge*100).toFixed(0)+"%";
-    lampPhase+=dt;
-    jackpotFlash=Math.max(0,jackpotFlash-dt);
-    updateFeature(dt);
-    shake*=Math.pow(.03,dt);
-    if(Math.floor(lampPhase*10)!==Math.floor((lampPhase-dt)*10))updateHUD();
-    for(const b of balls)if(b.alive)b.update(dt);
-    for(let i=balls.length-1;i>=0;i--)if(!balls[i].alive)balls.splice(i,1);
-    updateParticles(dt);
-  }
+本版在 V6.5 穩定物理核心的基礎上，重新設計整體視覺，讓機台更接近真實大型柏青哥的厚重感、金屬質感與高風險氛圍。
 
-  function frame(now){
-    const delta=Math.min(.035,(now-lastTime)/1000);
-    lastTime=now;accumulator+=delta;
-    while(accumulator>=FIXED_DT){
-      physicsStep(FIXED_DT);
-      accumulator-=FIXED_DT;
-    }
+## V6.6 主要改動
 
-    ctx.save();
-    const sx=(Math.random()-.5)*shake, sy=(Math.random()-.5)*shake;
-    ctx.translate(sx,sy);
-    drawBoard();drawBalls();drawParticles();drawOverlay();
-    ctx.restore();
+- 紅黑厚重塑膠外殼與黃銅鍍鉻邊框。
+- 側邊 LED 燈柱、機台徽章與玻璃反光層。
+- 右側操作面板改為更接近實機資訊面板的深色金屬質感。
+- 盤面加入紅色危險光、黃金燈與綠色機械核心色調。
+- 保留 V6.5 穩定遊戲核心，不改動碰撞與得分邏輯。
+- 保留黃金彈珠 ×10、周圍彈性撞擊物、旋轉撥輪、彈板、救球桿、拉霸與三層轉盤。
+- 手機與桌面版都會完整顯示機台，控制面板在手機上排列於機台下方。
 
-    requestAnimationFrame(frame);
-  }
+## 操作
 
-  safeLoad();
-  buildBoard();
-  updateHUD();
-  if("serviceWorker" in navigator){
-    window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
-  }
-  requestAnimationFrame(frame);
+- 手機／平板：長按發射按鈕蓄力，放開發射。
+- 電腦：按住空白鍵蓄力。
+- `A`：自動發射。
+- `M`：開關音效。
+- `F`：全螢幕。
+
+## 部署
+
+專案可直接部署至 GitHub Pages。首頁使用單一穩定遊戲核心 `game-stable-v65.js`，避免多個補丁互相覆蓋造成空白畫面。
+
+## 備註
+
+本遊戲僅供娛樂與物理模擬展示，所有積分不具現金價值。
+本版以巨大壓迫感、高風險感柏青哥機台為靈感，採原創視覺，不直接重現任何特定作品角色或畫面。
