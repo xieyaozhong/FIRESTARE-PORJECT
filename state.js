@@ -1,260 +1,448 @@
 "use strict";
 
-function drawHybridFeature(){
-    const cx=425;
+const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const scoreEl = document.getElementById("score");
+  const highScoreEl = document.getElementById("highScore");
+  const ballsEl = document.getElementById("balls");
+  const comboEl = document.getElementById("combo");
+  const feverFill = document.getElementById("feverFill");
+  const feverText = document.getElementById("feverText");
+  const feverCard = document.getElementById("feverCard");
+  const missionText = document.getElementById("missionText");
+  const missionFill = document.getElementById("missionFill");
+  const launchStat = document.getElementById("launchStat");
+  const startStat = document.getElementById("startStat");
+  const jackpotStat = document.getElementById("jackpotStat");
+  const toastEl = document.getElementById("toast");
+  const powerFill = document.getElementById("powerFill");
+  const powerText = document.getElementById("powerText");
+  const launchBtn = document.getElementById("launchBtn");
+  const autoBtn = document.getElementById("autoBtn");
+  const soundBtn = document.getElementById("soundBtn");
+  const fullscreenBtn = document.getElementById("fullscreenBtn");
+  const difficultySelect = document.getElementById("difficultySelect");
+  const addBtn = document.getElementById("addBtn");
+  const resetBtn = document.getElementById("resetBtn");
 
-    ctx.save();
+  const W = 900, H = 1200;
+  const BALL_R = 9.5;
+  const FIXED_DT = 1 / 120;
+  let gravity = 1010;
+  const MAX_BALLS_ON_BOARD = 9;
 
-    // -------- Slot machine: upper module --------
-    const sx=248,sy=170,sw=354,sh=220;
-    const outer=ctx.createLinearGradient(sx,sy,sx+sw,sy+sh);
-    outer.addColorStop(0,"#4a2708");
-    outer.addColorStop(.22,"#f6d66e");
-    outer.addColorStop(.48,"#fff4b4");
-    outer.addColorStop(.70,"#a66d1c");
-    outer.addColorStop(1,"#281404");
-    ctx.fillStyle=outer;
-    ctx.shadowColor=feature.mode==="slot"?"#ff3c85":"#ffd66b";
-    ctx.shadowBlur=feature.mode==="slot"?30:14;
-    ctx.beginPath();ctx.roundRect(sx,sy,sw,sh,22);ctx.fill();
-    ctx.shadowBlur=0;
+  let score = 0;
+  let ballsLeft = 30;
+  let bestCombo = 0;
+  let activeCombo = 0;
+  let charging = false;
+  let charge = 0;
+  let chargeDirection = 1;
+  let lastTime = performance.now();
+  let accumulator = 0;
+  let muted = false;
+  let shake = 0;
+  let jackpotFlash = 0;
+  let lampPhase = 0;
 
-    ctx.fillStyle="#080a0f";
-    ctx.beginPath();ctx.roundRect(sx+9,sy+9,sw-18,sh-18,16);ctx.fill();
-    ctx.strokeStyle="#ffffff35";ctx.lineWidth=2;ctx.stroke();
+  const STORAGE_KEY = "spark-pachinko-v5";
+  const difficulties = {
+    casual:{gravity:930, slotBoost:1.28, crankBoost:1.10, feverGain:1.25, prize:0.85},
+    classic:{gravity:1010, slotBoost:1.00, crankBoost:1.00, feverGain:1.00, prize:1.00},
+    extreme:{gravity:1090, slotBoost:0.82, crankBoost:0.90, feverGain:0.82, prize:1.45}
+  };
+  let difficulty="classic";
+  let highScore=0;
+  let autoFire=false;
+  let autoTimer=.4;
+  let toastTimer=0;
+  const fever={value:0,active:false,timer:0,duration:12};
+  const lifetime={launches:0,starts:0,jackpots:0};
+  const achievements=new Set();
+  const missions=[
+    {name:"啟動 START 3 次",kind:"starts",target:3,reward:500,balls:5},
+    {name:"發射 25 顆彈珠",kind:"launches",target:25,reward:350,balls:4},
+    {name:"單局累積 3000 分",kind:"score",target:3000,reward:800,balls:6},
+    {name:"取得 1 次最終 JACKPOT",kind:"jackpots",target:1,reward:1500,balls:10}
+  ];
+  let missionIndex=0;
+  let missionBase={launches:0,starts:0,jackpots:0,score:0};
 
-    ctx.textAlign="center";ctx.textBaseline="middle";
-    ctx.font="1000 18px system-ui";
-    ctx.fillStyle=feature.mode==="slot"?"#ff6ca1":"#ffe08a";
-    ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=10;
-    ctx.fillText("CHANCE REELS",cx,sy+27);
-    ctx.shadowBlur=0;
+  const slotSymbols = [
+    {text:"🍒", name:"CHERRY"},
+    {text:"🔔", name:"BELL"},
+    {text:"BAR", name:"BAR"},
+    {text:"7", name:"SEVEN"},
+    {text:"★", name:"STAR"},
+    {text:"💎", name:"DIAMOND"}
+  ];
 
-    const reelY=sy+52,reelH=106,reelW=86,gap=10,firstX=sx+38;
-    slot.reels.forEach((reel,i)=>{
-      const rx=firstX+i*(reelW+gap);
-      const centerY=reelY+reelH/2;
-      const windowGrad=ctx.createLinearGradient(0,reelY,0,reelY+reelH);
-      windowGrad.addColorStop(0,"#08090d");
-      windowGrad.addColorStop(.22,"#e8e2c7");
-      windowGrad.addColorStop(.50,"#ffffff");
-      windowGrad.addColorStop(.78,"#e8e2c7");
-      windowGrad.addColorStop(1,"#08090d");
-      ctx.fillStyle=windowGrad;
-      ctx.beginPath();ctx.roundRect(rx,reelY,reelW,reelH,9);ctx.fill();
-      ctx.strokeStyle="#d7ad43";ctx.lineWidth=3;ctx.stroke();
+  const feature = {
+    mode:"idle",
+    cooldown:0,
+    transition:0,
+    tier:"NONE"
+  };
 
-      ctx.save();
-      ctx.beginPath();ctx.roundRect(rx+3,reelY+3,reelW-6,reelH-6,6);ctx.clip();
-      const total=slotSymbols.length;
-      const base=Math.floor(reel.pos);
-      const frac=reel.pos-base;
-      for(let k=-2;k<=2;k++){
-        const index=((base+k)%total+total)%total;
-        const yy=centerY+(k-frac)*reelH;
-        const symbol=slotSymbols[index].text;
-        ctx.textAlign="center";ctx.textBaseline="middle";
-        ctx.fillStyle=index===3?"#df1637":index===4?"#d89400":"#11141c";
-        ctx.font=symbol==="BAR"
-          ?"1000 27px system-ui"
-          :"900 42px Apple Color Emoji, Segoe UI Emoji, system-ui";
-        ctx.fillText(symbol,rx+reelW/2,yy);
-      }
-      ctx.restore();
+  const slot = {
+    spinning:false,
+    evaluated:false,
+    elapsed:0,
+    qualified:false,
+    tier:"NONE",
+    message:"HIT START",
+    result:[0,1,4],
+    reels:[
+      {pos:0,speed:16,stopped:true},
+      {pos:1,speed:19,stopped:true},
+      {pos:4,speed:22,stopped:true}
+    ]
+  };
 
-      ctx.strokeStyle="#ff2f5c";ctx.lineWidth=2;
-      ctx.beginPath();ctx.moveTo(rx+4,centerY);ctx.lineTo(rx+reelW-4,centerY);ctx.stroke();
-    });
+  const crank = {
+    running:false,
+    stage:0,
+    timer:0,
+    message:"WAITING",
+    outcome:[false,false,false],
+    passChance:[0.67,0.48,0.28],
+    finalPrize:3000,
+    extraBalls:15,
+    tier:"STANDARD",
+    targetHole:[1,2,3],
+    stages:[
+      {diskAngle:0.2, speed:1.70, ballAngle:2.4, orbit:74, resolved:false},
+      {diskAngle:1.0, speed:-1.42, ballAngle:4.7, orbit:82, resolved:false},
+      {diskAngle:2.1, speed:1.18, ballAngle:1.2, orbit:90, resolved:false}
+    ]
+  };
 
-    ctx.fillStyle=feature.mode==="slot"?"#ff78a7":"#65e9ff";
-    ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=9;
-    ctx.font="1000 14px system-ui";
-    ctx.fillText(slot.message,cx,sy+184);
-    ctx.shadowBlur=0;
+  const balls = [];
+  const pins = [];
+  const bumpers = [];
+  const segments = [];
+  const particles = [];
+  const pockets = [
+    {x0:85,  x1:205, value:10,  label:"10"},
+    {x0:205, x1:325, value:30,  label:"30"},
+    {x0:325, x1:445, value:100, label:"100"},
+    {x0:445, x1:565, value:0,   label:"START", slot:true},
+    {x0:565, x1:685, value:50,  label:"50"},
+    {x0:685, x1:765, value:20,  label:"20"}
+  ];
 
-    // Slot bulbs.
-    for(let i=0;i<10;i++){
-      const bx=sx+24+i*34;
-      const on=feature.mode==="slot" || ((i+Math.floor(lampPhase*6))%3===0);
-      ctx.fillStyle=on?"#fff2a2":"#574421";
-      ctx.shadowColor=on?"#ffd66b":"transparent";ctx.shadowBlur=on?12:0;
-      ctx.beginPath();ctx.arc(bx,sy+205,4.5,0,Math.PI*2);ctx.fill();
+  function safeLoad(){
+    try{
+      const data=JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");
+      highScore=Number(data.highScore)||0;
+      difficulty=difficulties[data.difficulty]?data.difficulty:"classic";
+      difficultySelect.value=difficulty;
+      Object.assign(lifetime,data.lifetime||{});
+      (data.achievements||[]).forEach(id=>achievements.add(id));
+      missionIndex=Math.max(0,Math.min(missions.length-1,Number(data.missionIndex)||0));
+      missionBase=Object.assign(missionBase,data.missionBase||{});
+      muted=Boolean(data.muted);
+      applyDifficulty();
+    }catch(_){ applyDifficulty(); }
+  }
+
+  function saveProgress(){
+    try{
+      localStorage.setItem(STORAGE_KEY,JSON.stringify({
+        highScore,difficulty,lifetime,achievements:[...achievements],missionIndex,missionBase,muted
+      }));
+    }catch(_){}
+  }
+
+  function applyDifficulty(){
+    gravity=difficulties[difficulty].gravity;
+  }
+
+  function showToast(message){
+    toastEl.textContent=message;
+    toastEl.classList.add("show");
+    toastTimer=2.7;
+  }
+
+  function unlock(id,label){
+    if(achievements.has(id))return;
+    achievements.add(id);
+    showToast(`🏆 成就解鎖：${label}`);
+    saveProgress();
+  }
+
+  function addFever(amount){
+    if(fever.active)return;
+    fever.value=Math.min(100,fever.value+amount*difficulties[difficulty].feverGain);
+    if(fever.value>=100){
+      fever.active=true;
+      fever.timer=fever.duration;
+      fever.value=100;
+      unlock("first-fever","第一次進入 FEVER");
+      showToast("🔥 FEVER！12 秒內每次發射變成三球");
+      burst(425,850,"#ff4b97",70);
+      sound(980,.3,.07,"square");
     }
-    ctx.shadowBlur=0;
+  }
 
-    // Gate connecting slot to the three disks.
-    const gateOpen=feature.mode==="crank" || feature.mode==="result";
-    ctx.fillStyle=gateOpen?"#69ffb5":"#343b47";
-    ctx.shadowColor=gateOpen?"#69ffb5":"transparent";ctx.shadowBlur=gateOpen?18:0;
-    ctx.beginPath();
-    ctx.moveTo(cx-22,sy+220);ctx.lineTo(cx+22,sy+220);
-    ctx.lineTo(cx+15,430);ctx.lineTo(cx-15,430);ctx.closePath();ctx.fill();
-    ctx.shadowBlur=0;
-    ctx.fillStyle=gateOpen?"#09271a":"#131820";
-    ctx.font="1000 10px system-ui";ctx.fillText(gateOpen?"GATE OPEN":"LOCKED",cx,410);
+  function missionProgress(){
+    const m=missions[missionIndex];
+    if(m.kind==="score")return Math.max(0,score-missionBase.score);
+    return Math.max(0,lifetime[m.kind]-missionBase[m.kind]);
+  }
 
-    // -------- Three-tier crank: lower module --------
-    const centers=[
-      {y:470,rx:122,ry:40},
-      {y:580,rx:134,ry:44},
-      {y:690,rx:146,ry:49}
-    ];
+  function checkMission(){
+    const m=missions[missionIndex];
+    const progress=missionProgress();
+    if(progress<m.target)return;
+    score+=Math.round(m.reward*difficulties[difficulty].prize);
+    ballsLeft+=m.balls;
+    showToast(`✅ 任務完成：+${Math.round(m.reward*difficulties[difficulty].prize)} 分、+${m.balls} 顆`);
+    missionIndex=(missionIndex+1)%missions.length;
+    missionBase={launches:lifetime.launches,starts:lifetime.starts,jackpots:lifetime.jackpots,score};
+    saveProgress();
+    updateHUD();
+  }
 
-    for(let i=2;i>=0;i--){
-      const c=centers[i];
-      const active=feature.mode==="crank" && crank.stage===i;
-      const cleared=(feature.mode==="crank" || feature.mode==="result") && crank.stage>i;
-      const dim=feature.mode==="crank" && crank.stage<i;
+  function enhancedCrank(base){
+    const boost=difficulties[difficulty].crankBoost*(fever.active?1.08:1);
+    return base.map(v=>Math.min(.97,v*boost));
+  }
 
-      ctx.save();
-      ctx.translate(cx,c.y);
+  let audioCtx = null;
+  function sound(freq=520, duration=.035, volume=.025, type="sine") {
+    if (muted) return;
+    try {
+      audioCtx ??= new (window.AudioContext || window.webkitAudioContext)();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = type;
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(volume, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(.0001, audioCtx.currentTime + duration);
+      o.connect(g).connect(audioCtx.destination);
+      o.start();
+      o.stop(audioCtx.currentTime + duration);
+    } catch (_) {}
+  }
 
-      ctx.fillStyle="#07090d";
-      ctx.beginPath();ctx.ellipse(0,13,c.rx+8,c.ry+11,0,0,Math.PI*2);ctx.fill();
+  function addSegment(x1,y1,x2,y2,restitution=.72,kind="wall"){
+    segments.push({x1,y1,x2,y2,restitution,kind});
+  }
 
-      const rim=ctx.createLinearGradient(-c.rx,0,c.rx,0);
-      rim.addColorStop(0,"#242932");rim.addColorStop(.18,"#dce1e8");
-      rim.addColorStop(.38,"#606976");rim.addColorStop(.58,"#f7f8fa");
-      rim.addColorStop(.82,"#59626f");rim.addColorStop(1,"#171b22");
-      ctx.fillStyle=rim;
-      ctx.shadowColor=active?"#ff437e":cleared?"#69ffb5":"#52657d";
-      ctx.shadowBlur=active?24:cleared?14:5;
-      ctx.beginPath();ctx.ellipse(0,0,c.rx+8,c.ry+8,0,0,Math.PI*2);ctx.fill();
-      ctx.shadowBlur=0;
+  function addArc(cx,cy,r,a0,a1,steps,restitution=.82,kind="rail"){
+    let px = cx + Math.cos(a0)*r;
+    let py = cy + Math.sin(a0)*r;
+    for(let i=1;i<=steps;i++){
+      const a = a0 + (a1-a0)*(i/steps);
+      const x = cx + Math.cos(a)*r;
+      const y = cy + Math.sin(a)*r;
+      addSegment(px,py,x,y,restitution,kind);
+      px=x; py=y;
+    }
+  }
 
-      const bowl=ctx.createRadialGradient(-20,-10,5,0,0,c.rx);
-      bowl.addColorStop(0,dim?"#1c2026":"#6c747d");
-      bowl.addColorStop(.42,dim?"#0e1217":"#333942");
-      bowl.addColorStop(.78,"#090b10");bowl.addColorStop(1,"#020306");
-      ctx.fillStyle=bowl;
-      ctx.beginPath();ctx.ellipse(0,-2,c.rx-9,c.ry-8,0,0,Math.PI*2);ctx.fill();
-
-      ctx.strokeStyle=active?"#ff6b9b55":"#ffffff20";ctx.lineWidth=2;
-      for(let g=0;g<12;g++){
-        const a=crank.stages[i].diskAngle+g*Math.PI/6;
-        ctx.beginPath();
-        ctx.moveTo(Math.cos(a)*24,Math.sin(a)*9-2);
-        ctx.lineTo(Math.cos(a)*(c.rx-17),Math.sin(a)*(c.ry-13)-2);
-        ctx.stroke();
-      }
-
-      for(let h=0;h<6;h++){
-        const a=crank.stages[i].diskAngle+h*Math.PI*2/6;
-        const hx=Math.cos(a)*(c.rx-41);
-        const hy=Math.sin(a)*(c.ry-18)-2;
-        const pass=h===0;
-        const selected=active && crank.stages[i].targetHole===h && crank.timer>1.72;
-        ctx.fillStyle="#000";
-        ctx.shadowColor=pass?"#69ffb5":"#ff4a63";
-        ctx.shadowBlur=selected?24:pass?9:3;
-        ctx.beginPath();ctx.ellipse(hx,hy,13,6.5,0,0,Math.PI*2);ctx.fill();
-        ctx.strokeStyle=pass?"#72ffc0":"#a72f3f";
-        ctx.lineWidth=selected?4:2;ctx.stroke();
-        if(pass){
-          ctx.fillStyle="#c1ffe0";ctx.font="1000 8px system-ui";ctx.fillText("GO",hx,hy);
+  function buildBoard(){
+    pins.length=0; bumpers.length=0; segments.length=0;
+    addSegment(74,186,74,1070,.72);
+    addSegment(74,1070,765,1070,.60);
+    addSegment(825,210,825,1115,.65);
+    addSegment(765,235,765,1000,.76,"lane-divider");
+    addSegment(765,1000,725,1070,.65);
+    addSegment(825,1115,765,1115,.55);
+    addSegment(765,1115,765,1070,.55);
+    addArc(648,215,177,0.00,-1.80,22,.84,"outer-rail");
+    addArc(648,215,120,0.00,-1.63,18,.84,"inner-rail");
+    addSegment(620,96,565,112,.80,"guide");
+    addSegment(565,112,535,135,.80,"guide");
+    const cuts = [85,205,325,445,565,685,765];
+    for (let i=1;i<cuts.length-1;i++){
+      const x=cuts[i];
+      addSegment(x,920,x-22,1070,.62,"divider");
+      addSegment(x,920,x+22,1070,.62,"divider");
+    }
+    addSegment(85,920,85,1070,.65,"divider");
+    addSegment(765,920,765,1070,.65,"divider");
+    addSegment(238,620,305,670,.72,"guide");
+    addSegment(305,670,235,725,.72,"guide");
+    addSegment(612,620,545,670,.72,"guide");
+    addSegment(545,670,615,725,.72,"guide");
+    let row=0;
+    for(let y=225;y<=885;y+=54){
+      const offset = (row%2)*27;
+      for(let x=120+offset;x<=720;x+=54){
+        if (x>720) continue;
+        const blocked =
+          ((x>235 && x<615) && (y>170 && y<820)) ||
+          Math.hypot(x-235,y-570)<58 ||
+          Math.hypot(x-615,y-570)<58 ||
+          (y>760 && Math.abs(x-505)<45);
+        if (!blocked){
+          const jitterX = Math.sin(x*12.17+y*.71)*2.2;
+          const jitterY = Math.cos(x*.19+y*3.11)*1.4;
+          pins.push({x:x+jitterX,y:y+jitterY,r:5.4,flash:0});
         }
       }
-      ctx.shadowBlur=0;
-
-      ctx.fillStyle=active?"#ff5c92":cleared?"#6effb8":"#9099a8";
-      ctx.font="1000 11px system-ui";ctx.textAlign="left";
-      ctx.fillText(i===2?"FINAL":`LEVEL ${i+1}`,-c.rx+11,-c.ry+7);
-
-      if(active){
-        const st=crank.stages[i];
-        const bx=Math.cos(st.ballAngle)*st.orbit;
-        const by=Math.sin(st.ballAngle)*(st.orbit*.34)-7;
-        const ballG=ctx.createRadialGradient(bx-4,by-5,1,bx,by,10);
-        ballG.addColorStop(0,"#fff");ballG.addColorStop(.28,"#d9f7ff");
-        ballG.addColorStop(.64,"#718794");ballG.addColorStop(1,"#12181e");
-        ctx.fillStyle=ballG;ctx.shadowColor="#dfffff";ctx.shadowBlur=13;
-        ctx.beginPath();ctx.arc(bx,by,10,0,Math.PI*2);ctx.fill();
-        ctx.strokeStyle="#ffffffbb";ctx.lineWidth=1;ctx.stroke();ctx.shadowBlur=0;
-      }
-      ctx.restore();
-
-      if(i<2){
-        ctx.fillStyle=cleared?"#69ffb5":"#303844";
-        ctx.shadowColor=cleared?"#69ffb5":"transparent";ctx.shadowBlur=cleared?12:0;
-        ctx.beginPath();
-        ctx.moveTo(cx-17,c.y+38);ctx.lineTo(cx+17,c.y+38);
-        ctx.lineTo(cx+11,c.y+65);ctx.lineTo(cx-11,c.y+65);
-        ctx.closePath();ctx.fill();ctx.shadowBlur=0;
-      }
+      row++;
     }
-
-    // Unified status display.
-    ctx.fillStyle="#07090d";
-    ctx.beginPath();ctx.roundRect(282,756,286,42,11);ctx.fill();
-    ctx.strokeStyle=feature.mode==="crank"?"#ff4c87":feature.mode==="slot"?"#ffd66b":"#59e7ff";
-    ctx.lineWidth=2;ctx.stroke();
-    ctx.fillStyle=feature.mode==="crank"?"#ff79a8":feature.mode==="slot"?"#ffe18a":"#8ceeff";
-    ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=9;
-    ctx.font="1000 14px system-ui";ctx.textAlign="center";
-    const status=feature.mode==="crank" || feature.mode==="result" ? crank.message :
-      feature.mode==="slot" ? "REELS SELECT THE GATE" : "HIT START TO BEGIN";
-    ctx.fillText(status,cx,777);ctx.shadowBlur=0;
-
-    for(let i=0;i<8;i++){
-      const bx=281+i*41;
-      const on=feature.mode!=="idle" || ((i+Math.floor(lampPhase*6))%3===0);
-      ctx.fillStyle=on?"#ff4f83":"#4d222d";
-      ctx.shadowColor=on?"#ff2c70":"transparent";ctx.shadowBlur=on?12:0;
-      ctx.beginPath();ctx.arc(bx,813,5.5,0,Math.PI*2);ctx.fill();
-    }
-    ctx.shadowBlur=0;
-
-    ctx.restore();
+    bumpers.push(
+      {x:425,y:850,r:34,power:1.16,color:"#ff5ea8",flash:0,label:"START",triggerSlot:true},
+      {x:235,y:570,r:31,power:1.08,color:"#59e7ff",flash:0,label:""},
+      {x:615,y:570,r:31,power:1.08,color:"#59e7ff",flash:0,label:""},
+      {x:425,y:745,r:25,power:1.13,color:"#ffd66b",flash:0,label:""}
+    );
   }
 
-  function drawBalls(){
-    for(const ball of balls){
-      for(const t of ball.trail){
-        ctx.globalAlpha=t.a;
-        ctx.fillStyle="#9ceeff";
-        ctx.beginPath();ctx.arc(t.x,t.y,ball.r*.55,0,Math.PI*2);ctx.fill();
+  class Ball {
+    constructor(power){
+      this.x = 795;
+      this.y = 1076;
+      this.vx = -18 - power*42;
+      this.vy = -(1120 + power*1050);
+      this.r = BALL_R;
+      this.spin = (Math.random()-.5)*7;
+      this.age = 0;
+      this.alive = true;
+      this.trail = [];
+      this.hitCount = 0;
+      this.lastHit = 0;
+      this.alpha = 1;
+    }
+    update(dt){
+      this.age += dt;
+      this.lastHit -= dt;
+      this.vy += gravity*dt;
+      this.vx *= Math.pow(.9993,dt*120);
+      this.vy *= Math.pow(.9996,dt*120);
+      this.spin *= Math.pow(.997,dt*120);
+      this.x += this.vx*dt;
+      this.y += this.vy*dt;
+      const speed = Math.hypot(this.vx,this.vy);
+      if(speed>80){
+        const magnus = Math.max(-18,Math.min(18,this.spin*speed*.002));
+        this.vx += (-this.vy/speed)*magnus*dt;
+        this.vy += ( this.vx/speed)*magnus*dt;
       }
-      ctx.globalAlpha=1;
-      const bg=ctx.createRadialGradient(ball.x-4,ball.y-5,1,ball.x,ball.y,ball.r);
-      bg.addColorStop(0,"#ffffff");bg.addColorStop(.25,"#dff9ff");bg.addColorStop(.58,"#6d8ca7");bg.addColorStop(1,"#172331");
-      ctx.fillStyle=bg;ctx.shadowColor="#b8f7ff";ctx.shadowBlur=8;
-      ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle="#ffffffaa";ctx.lineWidth=1.1;ctx.stroke();
+      for(const s of segments) collideBallSegment(this,s);
+      for(const p of pins) collideBallCircle(this,p,.83,1,false);
+      for(const b of bumpers) collideBallCircle(this,b,.90,b.power,true);
+      if(this.y>1099 && this.x>760){
+        this.y=1099;
+        if(this.vy>0) this.vy*=-.42;
+      }
+      if(this.y > 1050 && this.x < 765){
+        const pocket = pockets.find(p => this.x>=p.x0 && this.x<p.x1);
+        if(pocket){
+          award(pocket,this.x,this.y);
+          this.alive=false;
+        }
+      }
+      if(this.y>1220 || this.x<-60 || this.x>960 || this.age>24){
+        this.alive=false;
+        activeCombo=0;
+      }
+      if(this.age%0.035<dt){
+        this.trail.push({x:this.x,y:this.y,a:.35});
+        if(this.trail.length>10)this.trail.shift();
+      }
+      for(const t of this.trail)t.a*=.89;
     }
-    ctx.shadowBlur=0;ctx.globalAlpha=1;
   }
 
-  function drawParticles(){
-    for(const p of particles){
-      ctx.globalAlpha=Math.max(0,p.life);
-      ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=8;
-      ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();
+  function collideBallCircle(ball,obj,restitution=0.82,power=1,isBumper=false){
+    const dx=ball.x-obj.x, dy=ball.y-obj.y;
+    const minD=ball.r+obj.r;
+    const d2=dx*dx+dy*dy;
+    if(d2>=minD*minD || d2===0)return;
+    const d=Math.sqrt(d2);
+    const nx=dx/d, ny=dy/d;
+    const pen=minD-d;
+    ball.x += nx*pen;
+    ball.y += ny*pen;
+    const vn=ball.vx*nx+ball.vy*ny;
+    if(vn<0){
+      const tx=-ny, ty=nx;
+      const vt=ball.vx*tx+ball.vy*ty;
+      const impulse=-(1+restitution)*vn*power;
+      ball.vx += impulse*nx;
+      ball.vy += impulse*ny;
+      const slip=vt-ball.spin*ball.r;
+      ball.vx -= tx*slip*.035;
+      ball.vy -= ty*slip*.035;
+      ball.spin += slip*.018;
+      const irregular=(Math.sin(obj.x*1.91+obj.y*.73+ball.hitCount)*.5)*7;
+      ball.vx += tx*irregular;
+      ball.vy += ty*irregular;
+      obj.flash=.12;
+      ball.hitCount++;
+      activeCombo++;
+      bestCombo=Math.max(bestCombo,activeCombo);
+      addFever(isBumper?2.4:.38);
+      if(ball.lastHit<=0){
+        sound(isBumper ? 760 : 430+Math.min(220,Math.abs(vn)*.08), isBumper?.06:.025, isBumper?.04:.012, "triangle");
+        ball.lastHit=.025;
+      }
+      if(isBumper){
+        shake=Math.min(8,shake+2.8);
+        burst(obj.x,obj.y,obj.color,10);
+        if(obj.triggerSlot && feature.cooldown<=0) startFeature();
+      }
     }
-    ctx.globalAlpha=1;ctx.shadowBlur=0;
   }
 
-  function drawOverlay(){
-    // Glass gloss.
-    const gloss=ctx.createLinearGradient(0,0,W,H);
-    gloss.addColorStop(0,"#ffffff13");gloss.addColorStop(.24,"#ffffff00");
-    gloss.addColorStop(.54,"#8fdfff08");gloss.addColorStop(1,"#ffffff00");
-    ctx.fillStyle=gloss;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(360,0);ctx.lineTo(760,H);ctx.lineTo(520,H);ctx.closePath();ctx.fill();
-
-    if(jackpotFlash>0){
-      ctx.globalAlpha=Math.min(.7,jackpotFlash*.35);
-      ctx.fillStyle="#ff5ea8";ctx.fillRect(0,0,W,H);
-      ctx.globalAlpha=1;
-      ctx.textAlign="center";ctx.font="1000 76px system-ui";ctx.fillStyle="#fff";
-      ctx.shadowColor="#ff2d8c";ctx.shadowBlur=40;
-      ctx.fillText("JACKPOT!",430,590);ctx.shadowBlur=0;
+  function collideBallSegment(ball,s){
+    const vx=s.x2-s.x1, vy=s.y2-s.y1;
+    const wx=ball.x-s.x1, wy=ball.y-s.y1;
+    const len2=vx*vx+vy*vy;
+    const t=Math.max(0,Math.min(1,(wx*vx+wy*vy)/len2));
+    const cx=s.x1+t*vx, cy=s.y1+t*vy;
+    let dx=ball.x-cx, dy=ball.y-cy;
+    const d2=dx*dx+dy*dy;
+    if(d2>=ball.r*ball.r)return;
+    let d=Math.sqrt(d2);
+    if(d<.0001){
+      const len=Math.sqrt(len2);
+      dx=-vy/len;dy=vx/len;d=1;
     }
-
-    if(ballsLeft<=0 && balls.length===0){
-      ctx.fillStyle="#05070bcc";roundedRect(170,500,560,150,28);ctx.fill();
-      ctx.strokeStyle="#ffd66b88";ctx.lineWidth=2;ctx.stroke();
-      ctx.fillStyle="#fff";ctx.font="900 32px system-ui";ctx.textAlign="center";
-      ctx.fillText("彈珠用完了",450,560);
-      ctx.font="600 18px system-ui";ctx.fillStyle="#b8c2d8";
-      ctx.fillText("按「補充 10 顆」繼續遊玩",450,607);
+    const nx=dx/d, ny=dy/d;
+    const pen=ball.r-d;
+    ball.x+=nx*pen;
+    ball.y+=ny*pen;
+    const vn=ball.vx*nx+ball.vy*ny;
+    if(vn<0){
+      const tx=-ny,ty=nx;
+      const vt=ball.vx*tx+ball.vy*ty;
+      const j=-(1+s.restitution)*vn;
+      ball.vx+=j*nx;
+      ball.vy+=j*ny;
+      ball.vx-=tx*vt*.015;
+      ball.vy-=ty*vt*.015;
+      ball.spin+=vt*.0015;
+      if(Math.abs(vn)>250 && ball.lastHit<=0){
+        sound(330+Math.min(180,Math.abs(vn)*.06),.022,.009,"triangle");
+        ball.lastHit=.025;
+      }
     }
+  }
+
+  function launch(){
+    const alive=balls.filter(b=>b.alive).length;
+    if(ballsLeft<=0 || alive>=MAX_BALLS_ON_BOARD)return;
+    const p=Math.max(.05,charge);
+    const count=fever.active?Math.min(3,MAX_BALLS_ON_BOARD-alive):1;
+    for(let i=0;i<count;i++){
+      const spread=(i-(count-1)/2)*42;
+      const ball=new Ball(Math.max(.05,Math.min(1,p+(Math.random()-.5)*.045)));
+      ball.vx+=spread;
+      ball.x+=(i-(count-1)/2)*3;
+      balls.push(ball);
+    }
+    ballsLeft--;
+    lifetime.launches++;
+    if(lifetime.launches===1)unlock("first-launch","第一次發射");
+    checkMission();
+    updateHUD();
+    saveProgress();
+    sound(110+p*90,.12,.045,"sawtooth");
+    charge=0;
   }
