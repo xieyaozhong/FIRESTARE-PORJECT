@@ -7,7 +7,7 @@
   <meta name="description" content="結合物理彈珠、三軸老虎機與三層圓盤的原創網頁柏青哥遊戲。" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-  <title>星火混合式柏青哥 V5｜老虎機 × 三層圓盤 × FEVER</title>
+  <title>星火混合式柏青哥 V6｜黃金彈珠 × 機械裝置</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -19,7 +19,7 @@
   <aside class="hud">
     <div>
       <div class="logo">星火 HYBRID PACHINKO</div>
-      <div class="sub">長按蓄力發射。START 會依序啟動老虎機與三層圓盤；累積 FEVER 後，每次發射會變成三球同時進場。</div>
+      <div class="sub">長按蓄力發射。旋轉撥輪、彈力擋板與移動救球桿會改變路徑；擊中左上 GOLD LOCK 可釋放所有得分 ×10 的黃金彈珠。</div>
     </div>
 
     <div class="card">
@@ -87,12 +87,22 @@
       </div>
     </div>
 
+    <div class="card combo-guide">
+      <div class="label">拉霸機 × 轉盤連動</div>
+      <div class="combo-row"><b>777</b><span>增加 GO 洞、轉盤減速、最高大獎</span></div>
+      <div class="combo-row"><b>💎 / ★</b><span>多重 GO 洞，鑽石重置黃金鎖</span></div>
+      <div class="combo-row"><b>BAR</b><span>擋板與撥輪進入機械增壓</span></div>
+      <div class="combo-row"><b>🔔 / 🍒</b><span>額外彈珠或降低前段難度</span></div>
+      <div class="combo-row"><b>混合圖案</b><span>皇家與經典組合有專屬路線</span></div>
+    </div>
+
     <button class="secondary" id="resetBtn">重新開始本局</button>
 
     <div class="card legend">
       <span><i class="dot" style="color:#59e7ff;background:#59e7ff"></i>一般獎洞：10～50 分</span>
-      <span><i class="dot" style="color:#ffd66b;background:#ffd66b"></i>黃金獎洞：100 分</span>
-      <span><i class="dot" style="color:#ff5ea8;background:#ff5ea8"></i>START：老虎機 → 三層圓盤</span>
+      <span><i class="dot" style="color:#ffd66b;background:#ffd66b"></i>黃金彈珠：所有得分與大獎 ×10</span>
+      <span><i class="dot" style="color:#69ffb5;background:#69ffb5"></i>機械裝置：撥輪、彈板與救球桿</span>
+      <span><i class="dot" style="color:#ff5ea8;background:#ff5ea8"></i>START：圖案組合改變轉盤規則</span>
     </div>
 
     <div class="notice">純娛樂物理模擬，積分不具現金價值。空白鍵蓄力、A 鍵自動發射、M 鍵音效、F 鍵全螢幕。紀錄會保存在這台裝置。</div>
@@ -105,6 +115,7 @@
 <script src="./controls.js" defer></script>
 <script src="./render-board.js" defer></script>
 <script src="./render-feature.js" defer></script>
+<script src="./v6-upgrade.js" defer></script>
 <script src="./main.js" defer></script>
 </body>
 </html>
