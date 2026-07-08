@@ -2,6 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "firestar-pixel-scheduler-v1";
+  const REWARD_SOURCE = "spark-course-mini-game";
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   let queued = false;
@@ -44,12 +45,22 @@
     return "ember";
   }
 
+  function latestGameCoupon(state) {
+    return (Array.isArray(state.coupons) ? state.coupons : [])
+      .filter(coupon => coupon?.rewardSource === REWARD_SOURCE)
+      .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))[0] || null;
+  }
+
+  function hasCompletedIgnition(state) {
+    return Boolean(state.sparkIgnition?.completedAt || latestGameCoupon(state));
+  }
+
   function migrateGameCoupons() {
     const state = loadState();
     let changed = false;
 
     (state.coupons || []).forEach(coupon => {
-      if (coupon?.rewardSource !== "spark-course-mini-game") return;
+      if (coupon?.rewardSource !== REWARD_SOURCE) return;
 
       const theme = coupon.rewardTheme || themeForValue(coupon.value);
       const meta = REWARD_META[theme] || REWARD_META.ember;
@@ -84,6 +95,15 @@
       }
     });
 
+    const existingCoupon = latestGameCoupon(state);
+    if (existingCoupon && !state.sparkIgnition?.completedAt) {
+      state.sparkIgnition = {
+        completedAt: Number(existingCoupon.createdAt || Date.now()),
+        couponId: existingCoupon.id
+      };
+      changed = true;
+    }
+
     if (changed) saveState(state);
   }
 
@@ -106,6 +126,10 @@
         border: 3px solid var(--ink, #29243e);
         box-shadow: 3px 3px 0 #ad6526;
       }
+      .course-game-banner.is-completed {
+        background: linear-gradient(135deg, #dcf8df 0 63%, #91d5a5 63% 100%);
+        box-shadow: 3px 3px 0 #347856;
+      }
       .course-game-banner::after {
         content: "✦";
         position: absolute;
@@ -127,10 +151,12 @@
         border: 3px solid var(--ink, #29243e);
         box-shadow: 3px 3px 0 #b55925;
       }
+      .course-game-banner.is-completed .game-icon { box-shadow: 3px 3px 0 #347856; }
       .course-game-banner strong,
       .course-game-banner small { position: relative; z-index: 1; display: block; }
       .course-game-banner strong { margin-bottom: 3px; font-size: 11px; }
       .course-game-banner small { color: #6b572f; font-size: 8px; line-height: 1.55; }
+      .course-game-banner.is-completed small { color: #315c4c; }
       .ignite-spark-button {
         position: relative;
         z-index: 2;
@@ -147,6 +173,10 @@
         border: 3px solid var(--ink, #29243e);
         box-shadow: 3px 3px 0 #9b4f1e, inset 2px 2px 0 rgba(255,255,255,.35);
         white-space: nowrap;
+      }
+      .ignite-spark-button.is-completed {
+        background: #3e8f69;
+        box-shadow: 3px 3px 0 #24573f, inset 2px 2px 0 rgba(255,255,255,.3);
       }
       .ignite-spark-button:active { transform: translate(3px, 3px); box-shadow: none; }
 
@@ -242,7 +272,7 @@
     $$(".course-game-link").forEach(link => link.remove());
   }
 
-  function decorateGameBanner() {
+  function decorateGameBanner(state) {
     const couponList = $("#couponList");
     if (!couponList) return;
 
@@ -254,13 +284,24 @@
       couponList.before(banner);
     }
 
-    if (banner.dataset.version === "universal-v1") return;
-    banner.dataset.version = "universal-v1";
-    banner.innerHTML = `
+    const completed = hasCompletedIgnition(state);
+    const signature = completed ? "completed-once-v1" : "available-once-v1";
+    if (banner.dataset.version === signature) return;
+
+    banner.dataset.version = signature;
+    banner.classList.toggle("is-completed", completed);
+    banner.innerHTML = completed ? `
+      <span class="game-icon" aria-hidden="true">✓</span>
+      <span>
+        <strong>你已點亮星火</strong>
+        <small>優惠券已發放至下方；每位用戶僅能點亮與領取一次</small>
+      </span>
+      <a class="ignite-spark-button is-completed" href="./game.html">查看點亮結果</a>
+    ` : `
       <span class="game-icon" aria-hidden="true">🔥</span>
       <span>
         <strong>長按火堆，點亮星火</strong>
-        <small>完成後隨機獲得不同稀有度與面額的全課程通用像素優惠券</small>
+        <small>完成後隨機獲得一張全課程通用像素優惠券；每位用戶限一次</small>
       </span>
       <a class="ignite-spark-button" href="./game.html">✦ 點亮星火</a>
     `;
@@ -272,7 +313,7 @@
     $$("#couponList .coupon-card").forEach(card => {
       const couponId = $("input", card)?.value;
       const coupon = coupons.get(couponId);
-      if (coupon?.rewardSource !== "spark-course-mini-game") return;
+      if (coupon?.rewardSource !== REWARD_SOURCE) return;
 
       const theme = coupon.rewardTheme || themeForValue(coupon.value);
       const meta = REWARD_META[theme] || REWARD_META.ember;
@@ -324,7 +365,7 @@
   function decorate() {
     const state = loadState();
     removeLegacyCourseLinks();
-    decorateGameBanner();
+    decorateGameBanner(state);
     decorateCoupons(state);
   }
 
