@@ -6,6 +6,15 @@
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   let queued = false;
 
+  const REWARD_META = {
+    ember: { name: "微光火種券", rarity: "普通", symbol: "✦" },
+    dawn: { name: "晨曦星芒券", rarity: "進階", symbol: "☀" },
+    forest: { name: "森語螢火券", rarity: "稀有", symbol: "❖" },
+    aurora: { name: "極光星焰券", rarity: "珍稀", symbol: "✧" },
+    royal: { name: "紫晶聖火券", rarity: "史詩", symbol: "◆" },
+    legendary: { name: "傳說金焰券", rarity: "傳說", symbol: "★" }
+  };
+
   function loadState() {
     try {
       const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -25,38 +34,57 @@
     }
   }
 
-  function escapeHtml(value) {
-    return String(value ?? "").replace(/[&<>'"]/g, character => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      "'": "&#39;",
-      '"': "&quot;"
-    })[character]);
+  function themeForValue(value) {
+    const points = Number(value) || 0;
+    if (points >= 150) return "legendary";
+    if (points >= 120) return "royal";
+    if (points >= 100) return "aurora";
+    if (points >= 80) return "forest";
+    if (points >= 60) return "dawn";
+    return "ember";
   }
 
-  function localDateString(date = new Date()) {
-    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-    return local.toISOString().slice(0, 10);
-  }
+  function migrateGameCoupons() {
+    const state = loadState();
+    let changed = false;
 
-  function showMessage(message, tone = "error") {
-    const toast = $("#toast");
-    if (!toast) return;
-    toast.textContent = message;
-    toast.className = `toast is-show is-${tone}`;
-    window.setTimeout(() => {
-      if (toast.textContent === message) toast.className = "toast";
-    }, 2600);
-  }
+    (state.coupons || []).forEach(coupon => {
+      if (coupon?.rewardSource !== "spark-course-mini-game") return;
 
-  function selectedCourseId(state) {
-    const selected = Array.isArray(state.selectedCourseIds) ? state.selectedCourseIds : [];
-    if (selected.length) return selected[0];
-    const today = localDateString();
-    return (state.courses || [])
-      .filter(course => course?.id && course?.date >= today)
-      .sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`))[0]?.id || "";
+      const theme = coupon.rewardTheme || themeForValue(coupon.value);
+      const meta = REWARD_META[theme] || REWARD_META.ember;
+
+      if (coupon.courseId) {
+        delete coupon.courseId;
+        changed = true;
+      }
+      if (coupon.rewardKey) {
+        delete coupon.rewardKey;
+        changed = true;
+      }
+      if (coupon.rewardScope !== "universal") {
+        coupon.rewardScope = "universal";
+        changed = true;
+      }
+      if (coupon.rewardTheme !== theme) {
+        coupon.rewardTheme = theme;
+        changed = true;
+      }
+      if (!coupon.rewardRarity) {
+        coupon.rewardRarity = meta.rarity;
+        changed = true;
+      }
+      if (!coupon.rewardSymbol) {
+        coupon.rewardSymbol = meta.symbol;
+        changed = true;
+      }
+      if (!coupon.name || coupon.name.includes("・星火闖關券")) {
+        coupon.name = meta.name;
+        changed = true;
+      }
+    });
+
+    if (changed) saveState(state);
   }
 
   function injectStyles() {
@@ -99,7 +127,8 @@
         border: 3px solid var(--ink, #29243e);
         box-shadow: 3px 3px 0 #b55925;
       }
-      .course-game-banner strong, .course-game-banner small { position: relative; z-index: 1; display: block; }
+      .course-game-banner strong,
+      .course-game-banner small { position: relative; z-index: 1; display: block; }
       .course-game-banner strong { margin-bottom: 3px; font-size: 11px; }
       .course-game-banner small { color: #6b572f; font-size: 8px; line-height: 1.55; }
       .ignite-spark-button {
@@ -122,15 +151,31 @@
       .ignite-spark-button:active { transform: translate(3px, 3px); box-shadow: none; }
 
       .coupon-card.game-voucher-card {
+        --coupon-a: #ffe0a1;
+        --coupon-b: #ff9c57;
+        --coupon-accent: #df5a2f;
+        --coupon-dark: #793721;
         position: relative;
         overflow: hidden;
-        min-height: 92px;
-        padding: 13px 18px;
+        min-height: 104px;
+        padding: 14px 18px;
         background:
-          linear-gradient(90deg, transparent 0 67%, rgba(255,255,255,.24) 67% 68%, transparent 68%),
-          linear-gradient(135deg, #fff1a8 0 56%, #ffcb66 56% 100%);
+          linear-gradient(90deg, transparent 0 68%, rgba(255,255,255,.23) 68% 69%, transparent 69%),
+          linear-gradient(135deg, var(--coupon-a) 0 56%, var(--coupon-b) 56% 100%);
         border: 4px solid var(--ink, #29243e);
-        box-shadow: 4px 4px 0 #9a4f20;
+        box-shadow: 4px 4px 0 var(--coupon-dark);
+      }
+      .coupon-card.game-voucher-card.theme-ember { --coupon-a:#ffe0a1; --coupon-b:#ff9c57; --coupon-accent:#df5a2f; --coupon-dark:#793721; }
+      .coupon-card.game-voucher-card.theme-dawn { --coupon-a:#fff5ae; --coupon-b:#ffd65d; --coupon-accent:#f09a2d; --coupon-dark:#8c521d; }
+      .coupon-card.game-voucher-card.theme-forest { --coupon-a:#d8f3bd; --coupon-b:#78c98d; --coupon-accent:#318260; --coupon-dark:#24553f; }
+      .coupon-card.game-voucher-card.theme-aurora { --coupon-a:#d9f0ff; --coupon-b:#88b8ff; --coupon-accent:#5f6fd7; --coupon-dark:#36447f; }
+      .coupon-card.game-voucher-card.theme-royal { --coupon-a:#ead8ff; --coupon-b:#a883e7; --coupon-accent:#7551b8; --coupon-dark:#463074; }
+      .coupon-card.game-voucher-card.theme-legendary {
+        --coupon-a:#fff7a6;
+        --coupon-b:#ffb833;
+        --coupon-accent:#e26c21;
+        --coupon-dark:#8a4218;
+        box-shadow: 0 0 0 3px #fff1a5, 5px 5px 0 #6c3213, 0 0 24px rgba(255,190,49,.55);
       }
       .coupon-card.game-voucher-card::before,
       .coupon-card.game-voucher-card::after {
@@ -152,27 +197,37 @@
         position: relative;
         z-index: 2;
         min-width: 72px;
-        color: #8c3f17;
+        color: var(--coupon-dark);
         font-size: 15px;
         text-align: right;
       }
       .game-voucher-card .voucher-kicker {
-        color: #7a3d1c !important;
+        color: var(--coupon-dark) !important;
         font-size: 7px !important;
         font-weight: 900 !important;
         letter-spacing: .12em;
       }
+      .game-voucher-card .voucher-meta {
+        display: flex !important;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin: 4px 0;
+      }
+      .game-voucher-card .voucher-meta b {
+        padding: 2px 5px;
+        color: #fff;
+        font-size: 7px;
+        background: var(--coupon-accent);
+        border: 2px solid var(--ink, #29243e);
+      }
       .game-voucher-card .voucher-serial {
-        color: #81633c !important;
+        color: var(--coupon-dark) !important;
         font-size: 7px !important;
         letter-spacing: .08em;
       }
-      .coupon-course-limit { color: #a34d19 !important; font-weight: 900 !important; }
-      .coupon-card.is-course-locked { opacity: .58; filter: grayscale(.25); }
-      .coupon-card.is-course-locked input { pointer-events: none; }
       .coupon-card.game-voucher-card.is-active {
         outline: 4px solid #fff;
-        box-shadow: 0 0 0 7px #ef7d32, 5px 5px 0 #7e3e19;
+        box-shadow: 0 0 0 7px var(--coupon-accent), 5px 5px 0 var(--coupon-dark);
       }
       @media (max-width: 560px) {
         .course-game-banner { grid-template-columns: auto 1fr; }
@@ -187,7 +242,7 @@
     $$(".course-game-link").forEach(link => link.remove());
   }
 
-  function decorateGameBanner(state) {
+  function decorateGameBanner() {
     const couponList = $("#couponList");
     if (!couponList) return;
 
@@ -199,87 +254,71 @@
       couponList.before(banner);
     }
 
-    const courseId = selectedCourseId(state);
-    const course = (state.courses || []).find(item => item.id === courseId);
-    const href = courseId ? `./game.html?course=${encodeURIComponent(courseId)}` : "./game.html";
-    const signature = `${courseId}|${course?.title || ""}|${href}`;
-    if (banner.dataset.signature === signature) return;
-
-    banner.dataset.signature = signature;
+    if (banner.dataset.version === "universal-v1") return;
+    banner.dataset.version = "universal-v1";
     banner.innerHTML = `
       <span class="game-icon" aria-hidden="true">🔥</span>
       <span>
-        <strong>點亮星火，取得課程優惠券</strong>
-        <small>${course ? `目前挑戰獎勵：${escapeHtml(course.title)}專用 100 點券` : "進入遊戲後選擇想領券的課程"}</small>
+        <strong>長按火堆，點亮星火</strong>
+        <small>完成後隨機獲得不同稀有度與面額的全課程通用像素優惠券</small>
       </span>
-      <a class="ignite-spark-button" href="${href}">✦ 點亮星火</a>
+      <a class="ignite-spark-button" href="./game.html">✦ 點亮星火</a>
     `;
   }
 
   function decorateCoupons(state) {
-    const selectedIds = new Set(Array.isArray(state.selectedCourseIds) ? state.selectedCourseIds : []);
-    const courses = new Map((state.courses || []).map(course => [course.id, course]));
     const coupons = new Map((state.coupons || []).map(coupon => [coupon.id, coupon]));
 
     $$("#couponList .coupon-card").forEach(card => {
       const couponId = $("input", card)?.value;
       const coupon = coupons.get(couponId);
-      if (!coupon?.courseId) return;
+      if (coupon?.rewardSource !== "spark-course-mini-game") return;
 
-      const course = courses.get(coupon.courseId);
+      const theme = coupon.rewardTheme || themeForValue(coupon.value);
+      const meta = REWARD_META[theme] || REWARD_META.ember;
       const textContainer = card.querySelector("span");
-      const isGameReward = coupon.rewardSource === "spark-course-mini-game";
-      card.classList.toggle("game-voucher-card", isGameReward);
 
-      if (isGameReward && textContainer) {
-        let kicker = $(".voucher-kicker", card);
-        if (!kicker) {
-          kicker = document.createElement("small");
-          kicker.className = "voucher-kicker";
-          kicker.textContent = "✦ FIRESTAR QUEST REWARD";
-          textContainer.prepend(kicker);
-        }
+      card.classList.add("game-voucher-card");
+      [...card.classList]
+        .filter(className => className.startsWith("theme-"))
+        .forEach(className => card.classList.remove(className));
+      card.classList.add(`theme-${theme}`);
+      card.classList.remove("is-course-locked");
 
-        let serial = $(".voucher-serial", card);
-        if (!serial) {
-          serial = document.createElement("small");
-          serial.className = "voucher-serial";
-          textContainer.appendChild(serial);
-        }
-        serial.textContent = `NO. ${String(coupon.id || "").slice(-8).toUpperCase()}`;
+      if (!textContainer) return;
+
+      let kicker = $(".voucher-kicker", card);
+      if (!kicker) {
+        kicker = document.createElement("small");
+        kicker.className = "voucher-kicker";
+        textContainer.prepend(kicker);
       }
+      kicker.textContent = `${coupon.rewardSymbol || meta.symbol} FIRESTAR RANDOM REWARD`;
 
-      let limit = $(".coupon-course-limit", card);
-      if (!limit && textContainer) {
-        limit = document.createElement("small");
-        limit.className = "coupon-course-limit";
-        textContainer.appendChild(limit);
+      let voucherMeta = $(".voucher-meta", card);
+      if (!voucherMeta) {
+        voucherMeta = document.createElement("small");
+        voucherMeta.className = "voucher-meta";
+        textContainer.appendChild(voucherMeta);
       }
-      const limitText = `限定課程：${course?.title || "指定課程"}`;
-      if (limit && limit.textContent !== limitText) limit.textContent = limitText;
+      voucherMeta.innerHTML = `<b>${coupon.rewardRarity || meta.rarity}</b><b>全課程通用</b>`;
 
-      const locked = !selectedIds.has(coupon.courseId);
-      if (card.classList.contains("is-course-locked") !== locked) {
-        card.classList.toggle("is-course-locked", locked);
+      let serial = $(".voucher-serial", card);
+      if (!serial) {
+        serial = document.createElement("small");
+        serial.className = "voucher-serial";
+        textContainer.appendChild(serial);
       }
+      serial.textContent = `NO. ${String(coupon.id || "").slice(-10).toUpperCase()}`;
+
+      $(".coupon-course-limit", card)?.remove();
     });
-  }
-
-  function enforceCouponScope(state) {
-    const coupon = (state.coupons || []).find(item => item.id === state.selectedCouponId);
-    if (!coupon?.courseId) return false;
-    const selected = Array.isArray(state.selectedCourseIds) ? state.selectedCourseIds : [];
-    if (selected.includes(coupon.courseId)) return false;
-    state.selectedCouponId = null;
-    saveState(state);
-    return true;
   }
 
   function decorate() {
     const state = loadState();
-    if (enforceCouponScope(state)) return;
     removeLegacyCourseLinks();
-    decorateGameBanner(state);
+    decorateGameBanner();
     decorateCoupons(state);
   }
 
@@ -292,30 +331,9 @@
     });
   }
 
-  function bindCouponGuard() {
-    const couponList = $("#couponList");
-    if (!couponList) return;
-    couponList.addEventListener("click", event => {
-      const card = event.target.closest(".coupon-card");
-      const couponId = card?.querySelector("input")?.value;
-      if (!couponId) return;
-
-      const state = loadState();
-      const coupon = (state.coupons || []).find(item => item.id === couponId);
-      if (!coupon?.courseId) return;
-      const selected = Array.isArray(state.selectedCourseIds) ? state.selectedCourseIds : [];
-      if (selected.includes(coupon.courseId)) return;
-
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      const course = (state.courses || []).find(item => item.id === coupon.courseId);
-      showMessage(`此優惠券僅適用「${course?.title || "指定課程"}」，請先加入該課程。`);
-    }, true);
-  }
-
   function init() {
+    migrateGameCoupons();
     injectStyles();
-    bindCouponGuard();
     scheduleDecorate();
     new MutationObserver(scheduleDecorate).observe(document.body, { childList: true, subtree: true });
     window.addEventListener("storage", event => {
