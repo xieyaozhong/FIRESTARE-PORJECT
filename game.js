@@ -24,8 +24,6 @@
     resultIcon: $("#resultIcon"),
     resultTitle: $("#resultTitle"),
     resultMessage: $("#resultMessage"),
-    retryButton: $("#retryButton"),
-    claimLink: $("#claimLink"),
     rewardVoucher: $("#rewardVoucher"),
     rewardSymbol: $("#rewardSymbol"),
     rewardRarity: $("#rewardRarity"),
@@ -42,6 +40,7 @@
   let animationFrame = 0;
   let activePointerId = null;
   let lastMilestone = 0;
+  let celebrationTimer = 0;
 
   function loadState() {
     try {
@@ -86,11 +85,19 @@
     return ignitionStatus(state);
   }
 
+  function setEnergyStage(progress) {
+    elements.playfield.classList.remove("energy-warm", "energy-bright", "energy-max");
+    if (progress >= 0.82) elements.playfield.classList.add("energy-max");
+    else if (progress >= 0.5) elements.playfield.classList.add("energy-bright");
+    else if (progress >= 0.18) elements.playfield.classList.add("energy-warm");
+  }
+
   function setProgress(progress) {
     const safeProgress = Math.max(0, Math.min(1, progress));
     elements.playfield.style.setProperty("--progress", safeProgress.toFixed(4));
     elements.progressText.textContent = String(Math.round(safeProgress * 100));
     elements.holdTime.textContent = (safeProgress * HOLD_DURATION / 1000).toFixed(1);
+    setEnergyStage(safeProgress);
   }
 
   function pickReward() {
@@ -162,6 +169,30 @@
     elements.rewardVoucher.hidden = false;
   }
 
+  function restartAnimation(element, className) {
+    if (!element) return;
+    element.classList.remove(className);
+    void element.offsetWidth;
+    element.classList.add(className);
+  }
+
+  function triggerCelebration() {
+    window.clearTimeout(celebrationTimer);
+    elements.playfield.classList.remove("is-celebrating");
+    document.body.classList.remove("is-ignition-shake");
+    void elements.playfield.offsetWidth;
+
+    elements.playfield.classList.add("is-celebrating");
+    document.body.classList.add("is-ignition-shake");
+    restartAnimation(elements.resultPanel, "is-revealing");
+    restartAnimation(elements.rewardVoucher, "is-revealing");
+
+    celebrationTimer = window.setTimeout(() => {
+      elements.playfield.classList.remove("is-celebrating");
+      document.body.classList.remove("is-ignition-shake");
+    }, 950);
+  }
+
   function showCompletedState(coupon, wasJustCompleted = false) {
     completed = true;
     holding = false;
@@ -175,15 +206,16 @@
     elements.bonfireButton.setAttribute("aria-disabled", "true");
     elements.bonfireButton.querySelector(".bonfire-label").textContent = "已點亮星火";
     elements.holdHint.textContent = "每位用戶只能點亮一次";
-    elements.retryButton.hidden = true;
 
     renderVoucher(coupon);
     elements.resultIcon.textContent = coupon?.rewardSymbol || "🔥";
     elements.resultTitle.textContent = "已點亮星火";
     elements.resultMessage.textContent = wasJustCompleted
-      ? `星火回應了你的光，優惠券已同步到排課中心。每位用戶只能點亮一次。`
-      : `你已經完成過點亮星火，優惠券已發放；每位用戶僅能領取一次。`;
+      ? "星火回應了你的光，優惠券已同步到排課中心。每位用戶只能點亮一次。"
+      : "你已經完成過點亮星火，優惠券已發放；每位用戶僅能領取一次。";
     elements.resultPanel.hidden = false;
+
+    if (wasJustCompleted) triggerCelebration();
   }
 
   function updateHold() {
@@ -255,7 +287,7 @@
     showCompletedState(result.coupon, result.created);
 
     if (result.created) {
-      elements.resultMessage.textContent = `星火回應了你的光，隨機獲得「${result.coupon.name}」${result.coupon.value} 點通用優惠券，已同步到排課中心。每位用戶限一次。`;
+      elements.resultMessage.textContent = `星火回應了你的光，獲得「${result.coupon.name}」${result.coupon.value} 點通用優惠券，已同步到排課中心。每位用戶限一次。`;
       if (navigator.vibrate) navigator.vibrate([40, 45, 100]);
     }
     elements.resultPanel.scrollIntoView({ behavior: "smooth", block: "center" });
