@@ -3,6 +3,7 @@
 
   const STORAGE_KEY = "firestar-pixel-scheduler-v1";
   const $ = (selector, root = document) => root.querySelector(selector);
+  let pendingSubmission = false;
 
   function loadState() {
     try {
@@ -76,6 +77,7 @@
     const style = document.createElement("style");
     style.id = "redemptionNoticeStyles";
     style.textContent = `
+      .receipt-redemption-note[hidden] { display: none !important; }
       .receipt-redemption-note {
         display: grid;
         grid-template-columns: auto 1fr;
@@ -100,6 +102,7 @@
       .receipt-redemption-note span { display: block; }
       .receipt-redemption-note strong { margin-bottom: 4px; font-size: 12px; }
       .receipt-redemption-note span { color: #315c4c; font-size: 10px; line-height: 1.7; }
+      #finishReceipt.receipt-leave-btn { background: #4f4671; box-shadow: 4px 4px 0 #29243e; }
       @media (max-width: 560px) {
         .receipt-redemption-note { grid-template-columns: 1fr; text-align: center; }
         .receipt-redemption-note .notice-icon { margin: 0 auto; }
@@ -121,6 +124,7 @@
     notice.id = "receiptRedemptionNotice";
     notice.className = "receipt-redemption-note";
     notice.setAttribute("role", "note");
+    notice.hidden = true;
     notice.innerHTML = `
       <div class="notice-icon" aria-hidden="true">📲</div>
       <div>
@@ -129,6 +133,48 @@
       </div>
     `;
     actions.before(notice);
+  }
+
+  function configureReceiptStay() {
+    const dialog = $("#scheduleDialog");
+    const submitButton = $("#submitSchedule");
+    const closeButton = $("#closeDialog");
+    const finishButton = $("#finishReceipt");
+    const notice = $("#receiptRedemptionNotice");
+
+    if (!dialog || !submitButton || !finishButton || !notice) return;
+
+    if (closeButton) closeButton.hidden = true;
+    finishButton.textContent = "離開結算畫面";
+    finishButton.classList.add("receipt-leave-btn");
+
+    submitButton.addEventListener("click", () => {
+      if (!submitButton.disabled) pendingSubmission = true;
+    }, true);
+
+    dialog.addEventListener("cancel", event => {
+      if (dialog.open) event.preventDefault();
+    });
+
+    dialog.addEventListener("click", event => {
+      if (dialog.open && event.target === dialog) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    }, true);
+
+    new MutationObserver(() => {
+      if (dialog.open && pendingSubmission) {
+        notice.hidden = false;
+        dialog.scrollTop = 0;
+        pendingSubmission = false;
+      }
+    }).observe(dialog, { attributes: true, attributeFilter: ["open"] });
+
+    dialog.addEventListener("close", () => {
+      notice.hidden = true;
+      pendingSubmission = false;
+    });
   }
 
   function observeChanges() {
@@ -148,6 +194,7 @@
   function init() {
     injectStyles();
     injectRedemptionNotice();
+    configureReceiptStay();
     updateUpcomingCourse();
     observeChanges();
     window.setTimeout(updateUpcomingCourse, 100);
