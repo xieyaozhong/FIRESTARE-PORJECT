@@ -22,7 +22,13 @@
     resultTitle: $("#resultTitle"),
     resultMessage: $("#resultMessage"),
     retryButton: $("#retryButton"),
-    claimLink: $("#claimLink")
+    claimLink: $("#claimLink"),
+    rewardVoucher: $("#rewardVoucher"),
+    rewardCouponName: $("#rewardCouponName"),
+    rewardCourseName: $("#rewardCourseName"),
+    rewardCourseTime: $("#rewardCourseTime"),
+    rewardCouponCode: $("#rewardCouponCode"),
+    rewardCouponValue: $("#rewardCouponValue")
   };
 
   let state = loadState();
@@ -127,6 +133,7 @@
   }
 
   function updateCourseDetail() {
+    state = loadState();
     const course = selectedCourse();
     if (!course) return;
     const reward = existingReward(course);
@@ -195,6 +202,7 @@
   }
 
   function startGame() {
+    state = loadState();
     const course = selectedCourse();
     if (!course || playing) return;
 
@@ -206,6 +214,7 @@
     elements.courseSelect.disabled = true;
     elements.startOverlay.hidden = true;
     elements.resultPanel.hidden = true;
+    elements.rewardVoucher.hidden = true;
     clearSparks();
 
     for (let index = 0; index < 3; index += 1) {
@@ -250,6 +259,15 @@
       .find(coupon => coupon.rewardKey === rewardKey(course));
   }
 
+  function renderVoucher(course, coupon) {
+    elements.rewardCouponName.textContent = coupon.name || "星火闖關券";
+    elements.rewardCourseName.textContent = course.title;
+    elements.rewardCourseTime.textContent = `${formatDate(course.date)}・${timeRange(course)}`;
+    elements.rewardCouponCode.textContent = `NO. ${String(coupon.id || "").slice(-8).toUpperCase()}`;
+    elements.rewardCouponValue.textContent = String(Number(coupon.value || REWARD_VALUE));
+    elements.rewardVoucher.hidden = false;
+  }
+
   function finishGame(success) {
     if (!playing) return;
     playing = false;
@@ -258,11 +276,13 @@
     clearSparks();
     elements.courseSelect.disabled = false;
 
+    state = loadState();
     const course = selectedCourse();
     elements.resultPanel.hidden = false;
     elements.resultPanel.scrollIntoView({ behavior: "smooth", block: "center" });
 
     if (!success || !course) {
+      elements.rewardVoucher.hidden = true;
       elements.resultIcon.textContent = "🌙";
       elements.resultTitle.textContent = "差一點就成功了";
       elements.resultMessage.textContent = `這次收集了 ${score} 個星火，再挑戰一次，收集 ${GOAL} 個即可過關。`;
@@ -271,11 +291,12 @@
     }
 
     const reward = issueReward(course);
+    renderVoucher(course, reward.coupon);
     elements.resultIcon.textContent = reward.created ? "🎉" : "🎟️";
-    elements.resultTitle.textContent = reward.created ? "挑戰完成，優惠券已發放" : "挑戰完成";
+    elements.resultTitle.textContent = reward.created ? "星火已點亮，優惠券已發放" : "星火已再次點亮";
     elements.resultMessage.textContent = reward.created
-      ? `已將「${course.title}」專用 ${REWARD_VALUE} 點優惠券加入排課中心。選擇這堂課後即可使用。`
-      : `你已經領取過「${course.title}」的遊戲優惠券，本次不會重複發放。`;
+      ? `這張精美券卡已同步到排課中心的「我的優惠券」，選擇「${course.title}」後即可使用。`
+      : `你已領取過「${course.title}」的優惠券，券卡仍保存在排課中心。`;
     elements.claimLink.hidden = false;
     elements.claimLink.href = `./index.html?course=${encodeURIComponent(course.id)}&reward=claimed`;
     updateCourseDetail();
