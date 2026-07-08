@@ -2,6 +2,7 @@
 "use strict";
 const CORE_SRC = "./app-core-v1.js?v=spark-schedule-core-v1";
 const STORAGE_KEY = "firestar-pixel-scheduler-v1";
+const RESCHEDULE_SERVICE_FEE = 100;
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const esc = value => String(value ?? "").replace(/[&<>'"]/g, char => ({
@@ -66,7 +67,7 @@ style.textContent = `
 .replacement-card.is-active{background:#d8ffe8;box-shadow:3px 3px 0 #24765c}.replacement-card input{accent-color:#7057d9}
 .replacement-card strong,.replacement-card small{display:block}.replacement-card small{margin-top:3px;color:#625a7c;font-size:9px}.replacement-cost{text-align:right;font-size:10px}.replacement-cost b{display:block;color:#392b75}
 .reschedule-coupon{display:flex;align-items:center;gap:9px;margin-top:12px;padding:10px;background:#fff2bd;border:3px solid #29243e;cursor:pointer}.reschedule-coupon input{accent-color:#7057d9}
-.reschedule-summary{display:grid;gap:6px;margin-top:12px;padding:12px;background:#fff;border:3px solid #29243e}.reschedule-summary div{display:flex;justify-content:space-between;gap:12px;font-size:11px}.reschedule-summary .pay-row{padding-top:7px;border-top:3px solid #29243e;font-size:14px;font-weight:900}
+.reschedule-summary{display:grid;gap:6px;margin-top:12px;padding:12px;background:#fff;border:3px solid #29243e}.reschedule-summary div{display:flex;justify-content:space-between;gap:12px;font-size:11px}.reschedule-summary .subtotal-row{padding-top:6px;border-top:2px dashed #29243e}.reschedule-summary .pay-row{padding-top:7px;border-top:3px solid #29243e;font-size:14px;font-weight:900}
 .reschedule-warning{margin:8px 0 0;color:#d85663;font-size:10px;font-weight:900}.reschedule-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 .reschedule-empty{padding:28px 14px;text-align:center;color:#625a7c;border:3px dashed #aaa1bc}
 @media(max-width:560px){.history-course-row{grid-template-columns:1fr auto!important}.history-course-row b{display:none}.reschedule-btn{grid-column:1/-1}.replacement-card{grid-template-columns:auto 1fr}.replacement-cost{grid-column:2;text-align:left}.reschedule-actions{grid-template-columns:1fr}}
@@ -83,7 +84,7 @@ dialog.innerHTML = `
 <div class="reschedule-head">
 <p class="eyebrow">CHANGE COURSE</p>
 <h2>我要調課</h2>
-<p>只能置換同類型、仍有名額且尚未開始的課程。較便宜的課程不退回點數。</p>
+<p>每次調課收取 ${fmt(RESCHEDULE_SERVICE_FEE)} 點手續費，另加新舊課程正差額。只能置換同類型、仍有名額且尚未開始的課程。</p>
 </div>
 <div id="rescheduleCurrent" class="reschedule-current"></div>
 <div id="replacementList" class="replacement-list"></div>
@@ -112,15 +113,17 @@ return state.coupons?.find(coupon => coupon.uses > 0 && String(coupon.name).incl
 }
 function calculateFee(state, newCourse) {
 const difference = Math.max(0, Number(newCourse.cost) - Number(context.oldCourse.cost));
+const serviceFee = RESCHEDULE_SERVICE_FEE;
+const subtotal = serviceFee + difference;
 const coupon = findChangeCoupon(state);
-const useCoupon = Boolean(coupon && difference > 0 && $("#useRescheduleCoupon")?.checked);
+const useCoupon = Boolean(coupon && subtotal > 0 && $("#useRescheduleCoupon")?.checked);
 let discount = 0;
 if (useCoupon) {
 discount = coupon.type === "percent"
-? Math.round(difference * Math.min(100, Number(coupon.value)) / 100)
-: Math.min(difference, Number(coupon.value));
+? Math.round(subtotal * Math.min(100, Number(coupon.value)) / 100)
+: Math.min(subtotal, Number(coupon.value));
 }
-return { difference, discount, final: Math.max(0, difference - discount), coupon: useCoupon ? coupon : null };
+return { serviceFee, difference, subtotal, discount, final: Math.max(0, subtotal - discount), coupon: useCoupon ? coupon : null };
 }
 function renderSummary() {
 const state = loadState();
@@ -130,14 +133,16 @@ $$(".replacement-card", dialog).forEach(card => card.classList.toggle("is-active
 if (!state || !newCourse) return;
 const fee = calculateFee(state, newCourse);
 $("#rescheduleSummary", dialog).innerHTML = `
+<div><span>調課手續費</span><strong>${fmt(fee.serviceFee)} 點</strong></div>
 <div><span>新舊課程差額</span><strong>${fmt(fee.difference)} 點</strong></div>
+<div class="subtotal-row"><span>調課小計</span><strong>${fmt(fee.subtotal)} 點</strong></div>
 <div><span>調課卷折抵</span><strong>−${fmt(fee.discount)} 點</strong></div>
 <div class="pay-row"><span>本次扣除</span><strong>${fmt(fee.final)} 點</strong></div>
 <div><span>調課後餘額</span><strong>${fmt(Math.max(0, state.points - fee.final))} 點</strong></div>`;
 const insufficient = fee.final > state.points;
 $("#rescheduleWarning", dialog).textContent = insufficient
 ? `點數不足，還差 ${fmt(fee.final - state.points)} 點。`
-: "原課程名額會自動歸還；較便宜的課程不退回差額。";
+: `本次包含 ${fmt(fee.serviceFee)} 點調課手續費；原課程名額會自動歸還，較便宜的課程不退回差額。`;
 $("#confirmReschedule", dialog).disabled = insufficient;
 }
 function openDialog(historyId, courseIndex) {
@@ -157,19 +162,20 @@ $("#rescheduleCurrent", dialog).innerHTML = `
 <b>${fmt(oldCourse.cost)} 點</b>`;
 $("#replacementList", dialog).innerHTML = replacements.length ? replacements.map(course => {
 const difference = Math.max(0, Number(course.cost) - Number(oldCourse.cost));
+const payableBeforeCoupon = RESCHEDULE_SERVICE_FEE + difference;
 return `<label class="replacement-card">
 <input type="radio" name="replacementCourse" value="${esc(course.id)}">
 <span><strong>${formatDate(course.date)} ${esc(course.time)}｜${esc(course.title)}</strong><small>${esc(course.teacher)}・剩 ${Number(course.seats)} 名・${esc(course.category)}</small></span>
-<span class="replacement-cost"><b>${fmt(course.cost)} 點</b><small>${difference ? `需補 ${fmt(difference)} 點` : "免補點數"}</small></span>
+<span class="replacement-cost"><b>${fmt(course.cost)} 點</b><small>調課共 ${fmt(payableBeforeCoupon)} 點${difference ? `（含補差額 ${fmt(difference)}）` : ""}</small></span>
 </label>`;
 }).join("") : '<div class="reschedule-empty">目前沒有可置換的同類型課程。請等待開課端新增課程。</div>';
 const coupon = findChangeCoupon(state);
 $("#rescheduleCouponArea", dialog).innerHTML = coupon ? `
 <label class="reschedule-coupon">
 <input id="useRescheduleCoupon" type="checkbox" checked>
-<span><strong>使用「${esc(coupon.name)}」</strong><small>剩 ${Number(coupon.uses)} 次・${coupon.type === "percent" ? `${Number(coupon.value)}% 折抵` : `折抵 ${fmt(coupon.value)} 點`}</small></span>
+<span><strong>使用「${esc(coupon.name)}」</strong><small>剩 ${Number(coupon.uses)} 次・折抵調課手續費與課程差額・${coupon.type === "percent" ? `${Number(coupon.value)}% 折抵` : `折抵 ${fmt(coupon.value)} 點`}</small></span>
 </label>` : "";
-$("#rescheduleSummary", dialog).innerHTML = '<div><span>請先選擇新課程</span><strong>—</strong></div>';
+$("#rescheduleSummary", dialog).innerHTML = `<div><span>固定調課手續費</span><strong>${fmt(RESCHEDULE_SERVICE_FEE)} 點</strong></div><div><span>請先選擇新課程</span><strong>—</strong></div>`;
 $("#rescheduleWarning", dialog).textContent = "";
 $("#confirmReschedule", dialog).disabled = true;
 if (typeof dialog.showModal === "function") dialog.showModal();
@@ -194,17 +200,18 @@ history.courses[context.courseIndex] = { ...newCourse };
 history.reschedules = Array.isArray(history.reschedules) ? history.reschedules : [];
 history.reschedules.push({
 id: `change-${Date.now()}`, changedAt: Date.now(), from: { ...oldCourse }, to: { ...newCourse },
-difference: fee.difference, discount: fee.discount, paid: fee.final, couponName: fee.coupon?.name || null
+serviceFee: fee.serviceFee, difference: fee.difference, subtotal: fee.subtotal,
+discount: fee.discount, paid: fee.final, couponName: fee.coupon?.name || null
 });
 history.total = Number(history.total || 0) + fee.final;
 history.gross = history.courses.reduce((sum, course) => sum + Number(course.cost || 0), 0);
 history.balance = state.points;
 history.updatedAt = Date.now();
 state.activities = Array.isArray(state.activities) ? state.activities : [];
-state.activities.unshift({ id: `log-${Date.now()}`, time: Date.now(), text: `調課完成：${oldCourse.title} → ${newCourse.title}，扣除 ${fee.final} 點。` });
+state.activities.unshift({ id: `log-${Date.now()}`, time: Date.now(), text: `調課完成：${oldCourse.title} → ${newCourse.title}，手續費 ${fee.serviceFee} 點、課程差額 ${fee.difference} 點，實扣 ${fee.final} 點。` });
 state.activities = state.activities.slice(0, 40);
 closeDialog();
-saveAndRefresh(state, `已改為「${newCourse.title}」，扣除 ${fmt(fee.final)} 點。`);
+saveAndRefresh(state, `已改為「${newCourse.title}」，本次調課扣除 ${fmt(fee.final)} 點。`);
 }
 function decorateHistory() {
 const state = loadState();
@@ -223,7 +230,7 @@ if (!course) return;
 const button = document.createElement("button");
 button.type = "button";
 button.className = "reschedule-btn";
-button.textContent = isFuture(course) ? "我要調課" : "已結束";
+button.textContent = isFuture(course) ? `我要調課（${fmt(RESCHEDULE_SERVICE_FEE)}點起）` : "已結束";
 button.disabled = !isFuture(course);
 button.addEventListener("click", () => openDialog(history.id, index));
 row.appendChild(button);
