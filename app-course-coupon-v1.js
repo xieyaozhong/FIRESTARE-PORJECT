@@ -293,7 +293,8 @@
         kicker.className = "voucher-kicker";
         textContainer.prepend(kicker);
       }
-      kicker.textContent = `${coupon.rewardSymbol || meta.symbol} FIRESTAR RANDOM REWARD`;
+      const kickerText = `${coupon.rewardSymbol || meta.symbol} FIRESTAR RANDOM REWARD`;
+      if (kicker.textContent !== kickerText) kicker.textContent = kickerText;
 
       let voucherMeta = $(".voucher-meta", card);
       if (!voucherMeta) {
@@ -301,7 +302,11 @@
         voucherMeta.className = "voucher-meta";
         textContainer.appendChild(voucherMeta);
       }
-      voucherMeta.innerHTML = `<b>${coupon.rewardRarity || meta.rarity}</b><b>全課程通用</b>`;
+      const metaSignature = `${coupon.rewardRarity || meta.rarity}|universal`;
+      if (voucherMeta.dataset.signature !== metaSignature) {
+        voucherMeta.dataset.signature = metaSignature;
+        voucherMeta.innerHTML = `<b>${coupon.rewardRarity || meta.rarity}</b><b>全課程通用</b>`;
+      }
 
       let serial = $(".voucher-serial", card);
       if (!serial) {
@@ -309,7 +314,8 @@
         serial.className = "voucher-serial";
         textContainer.appendChild(serial);
       }
-      serial.textContent = `NO. ${String(coupon.id || "").slice(-10).toUpperCase()}`;
+      const serialText = `NO. ${String(coupon.id || "").slice(-10).toUpperCase()}`;
+      if (serial.textContent !== serialText) serial.textContent = serialText;
 
       $(".coupon-course-limit", card)?.remove();
     });
