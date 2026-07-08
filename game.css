@@ -22,6 +22,7 @@ body {
   overflow-x: hidden;
 }
 button, a { font: inherit; -webkit-tap-highlight-color: transparent; }
+button { -webkit-appearance: none; appearance: none; }
 
 .sky { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
 .sky i { position: absolute; width: 5px; height: 5px; background: #fff7b5; box-shadow: 0 0 14px #ffd95a; animation: blink 1.8s steps(2) infinite; }
@@ -59,6 +60,10 @@ h1, h2, h3, p { margin-top: 0; }
   overflow: hidden;
   touch-action: none;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: contain;
   background:
     radial-gradient(circle at 50% 58%, rgba(255,181,64,calc(.08 + var(--progress) * .25)), transparent 39%),
     repeating-linear-gradient(0deg, transparent 0 35px, rgba(255,255,255,.045) 35px 36px),
@@ -66,11 +71,93 @@ h1, h2, h3, p { margin-top: 0; }
   border: 4px solid var(--ink);
   transition: filter .2s ease, background .2s ease;
 }
+.playfield *, .bonfire-button, .bonfire-button * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  touch-action: none;
+}
 .playfield::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 92px; background: linear-gradient(#426d4d, #294934); border-top: 4px solid var(--ink); pointer-events: none; }
 .playfield.energy-warm { filter: saturate(1.08); }
 .playfield.energy-bright { filter: saturate(1.2) brightness(1.04); }
 .playfield.energy-max { filter: saturate(1.35) brightness(1.09); }
+.playfield.is-climax { filter: saturate(1.5) brightness(1.14); }
 .playfield.is-locked { cursor: default; }
+
+.ritual-status {
+  position: absolute;
+  z-index: 7;
+  top: 16px;
+  left: 50%;
+  width: min(420px, calc(100% - 32px));
+  padding: 10px 13px;
+  transform: translateX(-50%);
+  text-align: center;
+  color: #fff7c7;
+  background: rgba(27,20,55,.74);
+  border: 3px solid rgba(255,224,112,.55);
+  box-shadow: 0 0 calc(6px + var(--progress) * 24px) rgba(255,183,60,.34), inset 0 0 18px rgba(255,212,94,.08);
+  backdrop-filter: blur(2px);
+}
+.ritual-status small, .ritual-status strong { display: block; }
+.ritual-status small { margin-bottom: 5px; color: #d7c8ff; font-size: 7px; letter-spacing: .2em; }
+.ritual-status strong { min-height: 16px; font-size: 11px; letter-spacing: .06em; text-shadow: 2px 2px 0 #201833; }
+.playfield.is-holding .ritual-status strong { animation: ritualTextPulse .7s steps(2) infinite; }
+@keyframes ritualTextPulse { 50% { color: #fff; text-shadow: 0 0 12px #ffd45d, 2px 2px 0 #201833; } }
+
+.ritual-steps { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; margin-top: 8px; }
+.ritual-steps i { height: 5px; background: #39305d; border: 1px solid rgba(255,255,255,.18); box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
+.playfield.ritual-stage-1 .ritual-steps i:nth-child(1),
+.playfield.ritual-stage-2 .ritual-steps i:nth-child(-n+2),
+.playfield.ritual-stage-3 .ritual-steps i:nth-child(-n+3),
+.playfield.ritual-stage-4 .ritual-steps i:nth-child(-n+4),
+.playfield.is-complete .ritual-steps i { background: #ffd95a; box-shadow: 0 0 10px #ff9d32; }
+
+.rune-ring {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 48%;
+  width: 330px;
+  height: 330px;
+  transform: translate(-50%,-50%) scale(calc(.6 + var(--progress) * .42));
+  opacity: calc(.08 + var(--progress) * .9);
+  border: 2px dotted rgba(255,226,133,.45);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.rune-ring span { position: absolute; left: 50%; top: 50%; color: #ffe582; font-size: 17px; text-shadow: 0 0 12px #ff8b2b; }
+.rune-ring span:nth-child(1) { transform: translate(-50%,-50%) rotate(0deg) translateY(-154px) rotate(0deg); }
+.rune-ring span:nth-child(2) { transform: translate(-50%,-50%) rotate(45deg) translateY(-154px) rotate(-45deg); }
+.rune-ring span:nth-child(3) { transform: translate(-50%,-50%) rotate(90deg) translateY(-154px) rotate(-90deg); }
+.rune-ring span:nth-child(4) { transform: translate(-50%,-50%) rotate(135deg) translateY(-154px) rotate(-135deg); }
+.rune-ring span:nth-child(5) { transform: translate(-50%,-50%) rotate(180deg) translateY(-154px) rotate(-180deg); }
+.rune-ring span:nth-child(6) { transform: translate(-50%,-50%) rotate(225deg) translateY(-154px) rotate(-225deg); }
+.rune-ring span:nth-child(7) { transform: translate(-50%,-50%) rotate(270deg) translateY(-154px) rotate(-270deg); }
+.rune-ring span:nth-child(8) { transform: translate(-50%,-50%) rotate(315deg) translateY(-154px) rotate(-315deg); }
+.playfield.is-holding .rune-ring { animation: runeOrbit 7s linear infinite; }
+.playfield.energy-max .rune-ring { animation-duration: 3.6s; filter: brightness(1.35); }
+.playfield.is-climax .rune-ring { animation-duration: 1.6s; opacity: 1; }
+@keyframes runeOrbit { to { rotate: 1turn; } }
+
+.ritual-seal {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: 48%;
+  width: 250px;
+  height: 250px;
+  transform: translate(-50%,-50%) rotate(45deg) scale(calc(.55 + var(--progress) * .42));
+  opacity: calc(var(--progress) * .5);
+  border: 3px solid rgba(255,185,70,.56);
+  box-shadow: inset 0 0 25px rgba(255,188,69,.2), 0 0 25px rgba(255,147,47,.22);
+  pointer-events: none;
+}
+.ritual-seal::before, .ritual-seal::after { content:""; position:absolute; inset:20%; border:2px solid rgba(255,236,155,.48); }
+.ritual-seal::after { transform: rotate(45deg); }
+.playfield.is-holding .ritual-seal { animation: sealBreathe 1.1s ease-in-out infinite alternate; }
+@keyframes sealBreathe { to { opacity:.82; filter:brightness(1.35); } }
 
 .halo, .light-rays, .spark-particles, .ambient-embers, .completion-burst, .completion-flash { position: absolute; pointer-events: none; }
 .halo {
@@ -102,6 +189,7 @@ h1, h2, h3, p { margin-top: 0; }
 .playfield.is-holding .halo-one { animation: haloGlow .72s ease-in-out infinite alternate; }
 .playfield.is-holding .halo-two { animation: haloGlow .92s ease-in-out .08s infinite alternate; }
 .playfield.is-holding .halo-three { animation: haloSpin 3s linear infinite; }
+.playfield.is-climax .halo { border-width: 7px; filter: brightness(1.4); }
 @keyframes haloGlow { to { filter: brightness(1.35); box-shadow: 0 0 72px rgba(255,179,60,.95), inset 0 0 36px rgba(255,239,170,.75); } }
 @keyframes haloSpin { to { rotate: 1turn; } }
 
@@ -114,8 +202,10 @@ h1, h2, h3, p { margin-top: 0; }
   transform: translate(-50%, -50%) rotate(calc(var(--progress) * 26deg));
   background: repeating-conic-gradient(from 0deg, rgba(255,228,137,.38) 0 4deg, transparent 4deg 18deg);
   mask-image: radial-gradient(circle, transparent 0 24%, #000 25% 64%, transparent 66%);
+  -webkit-mask-image: radial-gradient(circle, transparent 0 24%, #000 25% 64%, transparent 66%);
 }
 .playfield.energy-max .light-rays { animation: rayPulse .55s steps(2) infinite; }
+.playfield.is-climax .light-rays { animation-duration: .25s; }
 @keyframes rayPulse { 50% { opacity: .95; filter: brightness(1.35); } }
 
 .ambient-embers { inset: 0; z-index: 2; overflow: hidden; }
@@ -136,10 +226,12 @@ h1, h2, h3, p { margin-top: 0; }
   100% { opacity: 0; transform: translate(calc(-50% + var(--x)), var(--y)) scale(1.15); }
 }
 .playfield.is-holding .ambient-embers i { animation-duration: 1.65s; background: #ffe56f; }
+.playfield.is-climax .ambient-embers i { animation-duration: .72s; }
 
 .spark-particles { inset: 0; z-index: 3; opacity: calc(max(.08, var(--progress))); }
 .spark-particles i { position: absolute; left: 50%; top: 49%; width: 7px; height: 7px; background: #ffe36d; box-shadow: 0 0 12px #ff982f; opacity: 0; }
 .playfield.is-holding .spark-particles i { animation: particleFly 1.15s steps(6) infinite; }
+.playfield.is-climax .spark-particles i { animation-duration: .62s; }
 .spark-particles i:nth-child(1) { --x:-120px; --y:-155px; animation-delay:0s; }
 .spark-particles i:nth-child(2) { --x:100px; --y:-180px; animation-delay:.12s; }
 .spark-particles i:nth-child(3) { --x:-55px; --y:-220px; animation-delay:.24s; }
@@ -193,6 +285,9 @@ h1, h2, h3, p { margin-top: 0; }
   cursor: pointer;
   touch-action: none;
   outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 .bonfire-button::before {
   content: "";
@@ -215,6 +310,7 @@ h1, h2, h3, p { margin-top: 0; }
 .bonfire-button:focus-visible::after { outline: 5px solid #fff; outline-offset: 4px; }
 .playfield.is-holding .bonfire-button { animation: bonfirePulse .48s steps(2) infinite; }
 .playfield.energy-max .bonfire-button { animation-duration: .28s; }
+.playfield.is-climax .bonfire-button { animation-duration: .18s; }
 .playfield.is-complete .bonfire-button { animation: completePulse .85s steps(5) infinite; }
 .playfield.is-locked .bonfire-button { cursor: default; }
 @keyframes bonfirePulse { 50% { transform: scale(1.035); } }
@@ -237,6 +333,9 @@ h1, h2, h3, p { margin-top: 0; }
 .playfield.energy-max .flame-back { scale:1.08; }
 .playfield.energy-max .flame-mid { scale:1.12; }
 .playfield.energy-max .flame-front { background:#fff4a3; scale:1.18; }
+.playfield.is-climax .flame-back { scale:1.16; }
+.playfield.is-climax .flame-mid { scale:1.22; }
+.playfield.is-climax .flame-front { scale:1.32; filter:brightness(1.25); }
 @keyframes flameDance { 50% { translate:0 -7px; scale:1.08 .9; } }
 .log { bottom: 10px; width: 72px; height: 18px; background: #8b4a2f; border: 4px solid var(--ink); box-shadow: 4px 4px 0 #4f2e2c; }
 .log-left { left: 16px; transform: rotate(23deg); }
@@ -336,8 +435,19 @@ body.is-ignition-shake .game-shell { animation:screenShake .42s steps(2); }
   .game-header { align-items:stretch; flex-direction:column; }
   .back-link { width:100%; }
   .stats { grid-template-columns:1fr; }
-  .playfield { min-height:475px; }
+  .playfield { min-height:500px; }
+  .ritual-status { top:12px; padding:9px 10px; }
   .bonfire-button { width:190px; height:190px; }
+  .rune-ring { width:286px; height:286px; }
+  .rune-ring span:nth-child(1) { transform:translate(-50%,-50%) rotate(0deg) translateY(-132px) rotate(0deg); }
+  .rune-ring span:nth-child(2) { transform:translate(-50%,-50%) rotate(45deg) translateY(-132px) rotate(-45deg); }
+  .rune-ring span:nth-child(3) { transform:translate(-50%,-50%) rotate(90deg) translateY(-132px) rotate(-90deg); }
+  .rune-ring span:nth-child(4) { transform:translate(-50%,-50%) rotate(135deg) translateY(-132px) rotate(-135deg); }
+  .rune-ring span:nth-child(5) { transform:translate(-50%,-50%) rotate(180deg) translateY(-132px) rotate(-180deg); }
+  .rune-ring span:nth-child(6) { transform:translate(-50%,-50%) rotate(225deg) translateY(-132px) rotate(-225deg); }
+  .rune-ring span:nth-child(7) { transform:translate(-50%,-50%) rotate(270deg) translateY(-132px) rotate(-270deg); }
+  .rune-ring span:nth-child(8) { transform:translate(-50%,-50%) rotate(315deg) translateY(-132px) rotate(-315deg); }
+  .ritual-seal { width:220px; height:220px; }
   .halo-three { width:280px; height:280px; }
   .light-rays { width:330px; height:330px; }
   .reward-voucher { grid-template-columns:68px minmax(0,1fr); min-height:226px; }
