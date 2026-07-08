@@ -14,6 +14,40 @@
     }
   }
 
+  function migrateExampleTeacher() {
+    const state = loadState();
+    let changed = false;
+
+    const renameCourse = course => {
+      const isExampleCourse = course?.id === "course-math-prep" || course?.title === "數學先修班";
+      if (isExampleCourse && course.teacher === "曜中老師") {
+        course.teacher = "馬卡龍老師";
+        changed = true;
+      }
+    };
+
+    if (Array.isArray(state.courses)) state.courses.forEach(renameCourse);
+    if (Array.isArray(state.history)) {
+      state.history.forEach(item => {
+        if (Array.isArray(item.courses)) item.courses.forEach(renameCourse);
+      });
+    }
+
+    if (!changed) return;
+
+    const value = JSON.stringify(state);
+    localStorage.setItem(STORAGE_KEY, value);
+    try {
+      window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY, newValue: value }));
+    } catch {
+      window.dispatchEvent(new Event("storage"));
+    }
+    window.setTimeout(() => {
+      const toast = $("#toast");
+      if (toast) toast.className = "toast";
+    }, 0);
+  }
+
   function localDateString(date = new Date()) {
     const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
     return local.toISOString().slice(0, 10);
@@ -184,6 +218,11 @@
         .observe(historyList, { childList: true, subtree: true });
     }
 
+    const resetButton = $("#resetDemo");
+    if (resetButton) {
+      resetButton.addEventListener("click", () => window.setTimeout(migrateExampleTeacher, 0));
+    }
+
     window.addEventListener("storage", event => {
       if (!event.key || event.key === STORAGE_KEY) updateUpcomingCourse();
     });
@@ -192,6 +231,7 @@
   }
 
   function init() {
+    migrateExampleTeacher();
     injectStyles();
     injectRedemptionNotice();
     configureReceiptStay();
