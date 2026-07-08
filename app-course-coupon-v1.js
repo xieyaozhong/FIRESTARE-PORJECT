@@ -25,6 +25,21 @@
     }
   }
 
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>'"]/g, character => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "'": "&#39;",
+      '"': "&quot;"
+    })[character]);
+  }
+
+  function localDateString(date = new Date()) {
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 10);
+  }
+
   function showMessage(message, tone = "error") {
     const toast = $("#toast");
     if (!toast) return;
@@ -38,7 +53,7 @@
   function selectedCourseId(state) {
     const selected = Array.isArray(state.selectedCourseIds) ? state.selectedCourseIds : [];
     if (selected.length) return selected[0];
-    const today = new Date().toISOString().slice(0, 10);
+    const today = localDateString();
     return (state.courses || [])
       .filter(course => course?.id && course?.date >= today)
       .sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`))[0]?.id || "";
@@ -118,9 +133,8 @@
   }
 
   function decorateGameBanner(state) {
-    const couponArea = $(".coupon-area");
     const couponList = $("#couponList");
-    if (!couponArea || !couponList) return;
+    if (!couponList) return;
 
     let banner = $("#courseGameBanner");
     if (!banner) {
@@ -133,11 +147,15 @@
     const courseId = selectedCourseId(state);
     const course = (state.courses || []).find(item => item.id === courseId);
     const href = courseId ? `./game.html?course=${encodeURIComponent(courseId)}` : "./game.html";
+    const signature = `${courseId}|${course?.title || ""}|${href}`;
+    if (banner.dataset.signature === signature) return;
+
+    banner.dataset.signature = signature;
     banner.innerHTML = `
       <span class="game-icon" aria-hidden="true">🎮</span>
       <span>
         <strong>完成星火小遊戲拿課程優惠券</strong>
-        <small>${course ? `目前將挑戰「${course.title}」的專用優惠券` : "進入遊戲後選擇課程"}</small>
+        <small>${course ? `目前將挑戰「${escapeHtml(course.title)}」的專用優惠券` : "進入遊戲後選擇課程"}</small>
       </span>
       <a href="${href}">開始遊戲</a>
     `;
@@ -161,23 +179,28 @@
         limit.className = "coupon-course-limit";
         textContainer.appendChild(limit);
       }
-      if (limit) limit.textContent = `限定課程：${course?.title || "指定課程"}`;
-      card.classList.toggle("is-course-locked", !selectedIds.has(coupon.courseId));
+      const limitText = `限定課程：${course?.title || "指定課程"}`;
+      if (limit && limit.textContent !== limitText) limit.textContent = limitText;
+      const locked = !selectedIds.has(coupon.courseId);
+      if (card.classList.contains("is-course-locked") !== locked) {
+        card.classList.toggle("is-course-locked", locked);
+      }
     });
   }
 
   function enforceCouponScope(state) {
     const coupon = (state.coupons || []).find(item => item.id === state.selectedCouponId);
-    if (!coupon?.courseId) return;
+    if (!coupon?.courseId) return false;
     const selected = Array.isArray(state.selectedCourseIds) ? state.selectedCourseIds : [];
-    if (selected.includes(coupon.courseId)) return;
+    if (selected.includes(coupon.courseId)) return false;
     state.selectedCouponId = null;
     saveState(state);
+    return true;
   }
 
   function decorate() {
     const state = loadState();
-    enforceCouponScope(state);
+    if (enforceCouponScope(state)) return;
     decorateCourseCards(state);
     decorateGameBanner(state);
     decorateCoupons(state);
