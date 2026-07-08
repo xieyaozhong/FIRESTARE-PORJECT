@@ -7,7 +7,7 @@
   <meta name="description" content="長按火堆點亮星火，獲得通用像素優惠券。">
   <title>星火計畫｜點亮星火</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./game.css?v=spark-game-v4">
+  <link rel="stylesheet" href="./game.css?v=spark-game-v5">
 </head>
 <body>
   <div class="sky" aria-hidden="true">
@@ -37,6 +37,20 @@
         <div class="halo halo-two" aria-hidden="true"></div>
         <div class="halo halo-three" aria-hidden="true"></div>
         <div class="light-rays" aria-hidden="true"></div>
+
+        <div class="ritual-status" aria-live="polite">
+          <small>IGNITION RITE</small>
+          <strong id="ritualStage">將手覆於火種之上</strong>
+          <div class="ritual-steps" aria-hidden="true">
+            <i></i><i></i><i></i><i></i>
+          </div>
+        </div>
+
+        <div class="rune-ring" aria-hidden="true">
+          <span>✦</span><span>◆</span><span>✧</span><span>❖</span>
+          <span>✦</span><span>◆</span><span>✧</span><span>❖</span>
+        </div>
+        <div class="ritual-seal" aria-hidden="true"></div>
 
         <div class="ambient-embers" aria-hidden="true">
           <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
@@ -104,6 +118,6 @@
     </section>
   </main>
 
-  <script src="./game.js?v=spark-game-v5" defer></script>
+  <script src="./game.js?v=spark-game-v6" defer></script>
 </body>
 </html>
