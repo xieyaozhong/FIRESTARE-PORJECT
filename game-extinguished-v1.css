@@ -1,0 +1,228 @@
+/* Extinguished bonfire state and staged ignition */
+.fire-pixel {
+  isolation: isolate;
+}
+
+.fire-pixel::before,
+.fire-pixel::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Faint ember bed between the charred logs. */
+.fire-pixel::before {
+  z-index: 1;
+  left: 50%;
+  bottom: 19px;
+  width: 46px;
+  height: 7px;
+  transform: translateX(-50%);
+  background: repeating-linear-gradient(
+    90deg,
+    #4b3030 0 7px,
+    #6c342c 7px 12px,
+    #39282d 12px 18px
+  );
+  border: 3px solid var(--ink);
+  box-shadow: 3px 3px 0 #251d28;
+  opacity: .68;
+  transition: background .22s steps(3), box-shadow .22s steps(3), opacity .22s steps(3);
+}
+
+/* Pixel smoke visible only while the fire is extinguished. */
+.fire-pixel::after {
+  z-index: 2;
+  left: 50%;
+  bottom: 70px;
+  width: 10px;
+  height: 10px;
+  background: #777185;
+  box-shadow:
+    -9px -10px 0 #625e70,
+    8px -21px 0 #817b8c,
+    -4px -33px 0 #696475,
+    11px -44px 0 #827c8c;
+  opacity: .34;
+  transform: translateX(-50%);
+  animation: extinguishedSmoke 2.6s steps(7) infinite;
+  transition: opacity .18s linear;
+}
+
+@keyframes extinguishedSmoke {
+  0% {
+    opacity: 0;
+    translate: 0 8px;
+    scale: .75;
+  }
+  20% { opacity: .34; }
+  70% { opacity: .2; }
+  100% {
+    opacity: 0;
+    translate: 5px -18px;
+    scale: 1.14;
+  }
+}
+
+/* Charred logs before ignition. */
+.playfield:not(.is-holding):not(.is-climax):not(.is-complete) .log {
+  background: #4b3837;
+  box-shadow: 4px 4px 0 #292329, inset 0 4px 0 rgba(255,255,255,.04);
+  filter: saturate(.45) brightness(.78);
+}
+
+/* The bonfire begins fully extinguished. */
+.playfield:not(.is-holding):not(.is-climax):not(.is-complete) .flame {
+  opacity: 0;
+  animation: none;
+  scale: .18;
+  filter: brightness(.45) saturate(.4);
+}
+
+.playfield:not(.is-holding):not(.is-climax):not(.is-complete) .fire-pixel {
+  filter: drop-shadow(0 4px 0 rgba(16,12,27,.3));
+}
+
+.flame {
+  opacity: 0;
+  transition:
+    opacity .2s steps(3),
+    scale .22s steps(4),
+    filter .22s steps(3),
+    background-color .22s steps(3);
+}
+
+/* Stage 1: a tiny red flame wakes from the ember bed. */
+.playfield.is-holding.ritual-stage-1 .flame-back {
+  opacity: .38;
+  scale: .5;
+  filter: brightness(.72) saturate(.78);
+}
+
+.playfield.is-holding.ritual-stage-1 .flame-mid {
+  opacity: .08;
+  scale: .28;
+}
+
+.playfield.is-holding.ritual-stage-1 .flame-front {
+  opacity: 0;
+  scale: .18;
+}
+
+.playfield.is-holding.ritual-stage-1 .fire-pixel::before {
+  background: repeating-linear-gradient(
+    90deg,
+    #873729 0 7px,
+    #d05b28 7px 12px,
+    #4c2d2c 12px 18px
+  );
+  box-shadow: 3px 3px 0 #251d28, 0 0 9px rgba(229,83,36,.48);
+}
+
+/* Warm stage: the red flame grows and orange light appears. */
+.playfield.energy-warm .flame-back {
+  opacity: .62;
+  scale: .72;
+  filter: brightness(.9) saturate(.95);
+}
+
+.playfield.energy-warm .flame-mid {
+  opacity: .3;
+  scale: .52;
+}
+
+.playfield.energy-warm .flame-front {
+  opacity: .08;
+  scale: .32;
+}
+
+/* Bright stage: all three flame layers become visible. */
+.playfield.energy-bright .flame-back {
+  opacity: .9;
+  scale: .92;
+  filter: brightness(1.02) saturate(1.05);
+}
+
+.playfield.energy-bright .flame-mid {
+  opacity: .72;
+  scale: .82;
+}
+
+.playfield.energy-bright .flame-front {
+  opacity: .42;
+  scale: .66;
+}
+
+/* Resonance and climax: the fire reaches full strength. */
+.playfield.ritual-stage-3 .flame,
+.playfield.energy-max .flame,
+.playfield.is-climax .flame,
+.playfield.is-complete .flame {
+  opacity: 1;
+  filter: brightness(1.08) saturate(1.08);
+}
+
+.playfield.ritual-stage-3 .flame-back,
+.playfield.energy-max .flame-back,
+.playfield.is-climax .flame-back,
+.playfield.is-complete .flame-back {
+  scale: 1.06;
+}
+
+.playfield.ritual-stage-3 .flame-mid,
+.playfield.energy-max .flame-mid,
+.playfield.is-climax .flame-mid,
+.playfield.is-complete .flame-mid {
+  scale: 1.1;
+}
+
+.playfield.ritual-stage-3 .flame-front,
+.playfield.energy-max .flame-front,
+.playfield.is-climax .flame-front,
+.playfield.is-complete .flame-front {
+  scale: 1.15;
+}
+
+.playfield.is-holding .fire-pixel::after,
+.playfield.is-climax .fire-pixel::after,
+.playfield.is-complete .fire-pixel::after {
+  opacity: 0;
+  animation: none;
+}
+
+.playfield.is-holding .log,
+.playfield.is-climax .log,
+.playfield.is-complete .log {
+  background: #8b4a2f;
+  filter: none;
+  transition: background .25s steps(3), filter .25s steps(3), box-shadow .25s steps(3);
+}
+
+.playfield.energy-bright .fire-pixel::before,
+.playfield.energy-max .fire-pixel::before,
+.playfield.is-climax .fire-pixel::before,
+.playfield.is-complete .fire-pixel::before {
+  background: repeating-linear-gradient(
+    90deg,
+    #ff6f2d 0 7px,
+    #ffd25c 7px 12px,
+    #a84324 12px 18px
+  );
+  box-shadow:
+    3px 3px 0 #4c2724,
+    0 0 15px rgba(255,121,42,.72),
+    0 0 28px rgba(255,196,72,.35);
+  opacity: 1;
+}
+
+/* Keep completed users seeing the fully lit fire. */
+.playfield.is-complete .fire-pixel {
+  filter: drop-shadow(0 0 22px rgba(255,153,42,.9));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fire-pixel::after {
+    animation: none;
+    opacity: .25;
+  }
+}
