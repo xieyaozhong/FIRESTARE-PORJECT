@@ -3,6 +3,7 @@
 
   const STORAGE_KEY = "firestar-pixel-scheduler-v1";
   const HOLD_DURATION = 3000;
+  const REWARD_SOURCE = "spark-course-mini-game";
   const REWARD_POOL = [
     { name: "微光火種券", value: 40, theme: "ember", rarity: "普通", symbol: "✦", weight: 30 },
     { name: "晨曦星芒券", value: 60, theme: "dawn", rarity: "進階", symbol: "☀", weight: 25 },
@@ -55,6 +56,36 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
 
+  function gameCoupons(sourceState = state) {
+    return (Array.isArray(sourceState.coupons) ? sourceState.coupons : [])
+      .filter(coupon => coupon?.rewardSource === REWARD_SOURCE)
+      .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+  }
+
+  function ignitionStatus(sourceState = state) {
+    const coupon = gameCoupons(sourceState)[0] || null;
+    const record = sourceState.sparkIgnition;
+    const completedAt = Number(record?.completedAt || coupon?.createdAt || 0);
+    return {
+      completed: Boolean(completedAt || coupon),
+      completedAt,
+      coupon
+    };
+  }
+
+  function persistLegacyCompletion() {
+    state = loadState();
+    const status = ignitionStatus(state);
+    if (!status.completed || state.sparkIgnition?.completedAt) return status;
+
+    state.sparkIgnition = {
+      completedAt: status.completedAt || Date.now(),
+      couponId: status.coupon?.id || null
+    };
+    saveState();
+    return ignitionStatus(state);
+  }
+
   function setProgress(progress) {
     const safeProgress = Math.max(0, Math.min(1, progress));
     elements.playfield.style.setProperty("--progress", safeProgress.toFixed(4));
@@ -74,6 +105,11 @@
 
   function issueReward(reward) {
     state = loadState();
+    const currentStatus = ignitionStatus(state);
+    if (currentStatus.completed) {
+      return { coupon: currentStatus.coupon, created: false };
+    }
+
     state.coupons = Array.isArray(state.coupons) ? state.coupons : [];
     state.activities = Array.isArray(state.activities) ? state.activities : [];
 
@@ -87,22 +123,31 @@
       rewardTheme: reward.theme,
       rewardRarity: reward.rarity,
       rewardSymbol: reward.symbol,
-      rewardSource: "spark-course-mini-game",
+      rewardSource: REWARD_SOURCE,
       createdAt: Date.now()
     };
 
     state.coupons.push(coupon);
+    state.sparkIgnition = {
+      completedAt: coupon.createdAt,
+      couponId: coupon.id
+    };
     state.activities.unshift({
       id: `log-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
       time: Date.now(),
-      text: `已點亮星火，獲得通用「${reward.name}」${reward.value} 點優惠券。`
+      text: `已點亮星火，獲得通用「${reward.name}」${reward.value} 點優惠券。每位用戶限領一次。`
     });
     state.activities = state.activities.slice(0, 40);
     saveState();
-    return coupon;
+    return { coupon, created: true };
   }
 
   function renderVoucher(coupon) {
+    if (!coupon) {
+      elements.rewardVoucher.hidden = true;
+      return;
+    }
+
     const themeClasses = [...elements.rewardVoucher.classList]
       .filter(className => className.startsWith("theme-"));
     themeClasses.forEach(className => elements.rewardVoucher.classList.remove(className));
@@ -110,11 +155,35 @@
 
     elements.rewardSymbol.textContent = coupon.rewardSymbol || "✦";
     elements.rewardRarity.textContent = coupon.rewardRarity || "普通";
-    elements.rewardCouponName.textContent = coupon.name;
+    elements.rewardCouponName.textContent = coupon.name || "星火優惠券";
     elements.rewardScope.textContent = "星火計畫全課程皆可使用";
-    elements.rewardCouponCode.textContent = `NO. ${String(coupon.id).slice(-10).toUpperCase()}`;
-    elements.rewardCouponValue.textContent = String(coupon.value);
+    elements.rewardCouponCode.textContent = `NO. ${String(coupon.id || "").slice(-10).toUpperCase()}`;
+    elements.rewardCouponValue.textContent = String(Number(coupon.value || 0));
     elements.rewardVoucher.hidden = false;
+  }
+
+  function showCompletedState(coupon, wasJustCompleted = false) {
+    completed = true;
+    holding = false;
+    activePointerId = null;
+    cancelAnimationFrame(animationFrame);
+    setProgress(1);
+
+    elements.playfield.classList.remove("is-holding");
+    elements.playfield.classList.add("is-complete", "is-locked");
+    elements.bonfireButton.disabled = true;
+    elements.bonfireButton.setAttribute("aria-disabled", "true");
+    elements.bonfireButton.querySelector(".bonfire-label").textContent = "已點亮星火";
+    elements.holdHint.textContent = "每位用戶只能點亮一次";
+    elements.retryButton.hidden = true;
+
+    renderVoucher(coupon);
+    elements.resultIcon.textContent = coupon?.rewardSymbol || "🔥";
+    elements.resultTitle.textContent = "已點亮星火";
+    elements.resultMessage.textContent = wasJustCompleted
+      ? `星火回應了你的光，優惠券已同步到排課中心。每位用戶只能點亮一次。`
+      : `你已經完成過點亮星火，優惠券已發放；每位用戶僅能領取一次。`;
+    elements.resultPanel.hidden = false;
   }
 
   function updateHold() {
@@ -137,6 +206,12 @@
   }
 
   function beginHold(event) {
+    state = loadState();
+    const status = ignitionStatus(state);
+    if (status.completed) {
+      showCompletedState(status.coupon, false);
+      return;
+    }
     if (completed || holding) return;
     if (event?.type === "pointerdown" && event.button !== 0) return;
 
@@ -172,39 +247,18 @@
   function completeIgnition() {
     if (completed) return;
     holding = false;
-    completed = true;
     activePointerId = null;
     cancelAnimationFrame(animationFrame);
-    setProgress(1);
-    elements.playfield.classList.remove("is-holding");
-    elements.playfield.classList.add("is-complete");
-    elements.holdHint.textContent = "已點亮星火";
-    elements.bonfireButton.querySelector(".bonfire-label").textContent = "星火已點亮";
 
     const reward = pickReward();
-    const coupon = issueReward(reward);
-    renderVoucher(coupon);
+    const result = issueReward(reward);
+    showCompletedState(result.coupon, result.created);
 
-    elements.resultIcon.textContent = reward.symbol;
-    elements.resultTitle.textContent = "已點亮星火";
-    elements.resultMessage.textContent = `星火回應了你的光，隨機獲得「${reward.name}」${reward.value} 點通用優惠券，已同步到排課中心。`;
-    elements.resultPanel.hidden = false;
+    if (result.created) {
+      elements.resultMessage.textContent = `星火回應了你的光，隨機獲得「${result.coupon.name}」${result.coupon.value} 點通用優惠券，已同步到排課中心。每位用戶限一次。`;
+      if (navigator.vibrate) navigator.vibrate([40, 45, 100]);
+    }
     elements.resultPanel.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-
-  function resetGame() {
-    holding = false;
-    completed = false;
-    activePointerId = null;
-    lastMilestone = 0;
-    cancelAnimationFrame(animationFrame);
-    elements.playfield.classList.remove("is-holding", "is-complete");
-    elements.holdHint.textContent = "持續按住 3 秒，不要放開";
-    elements.bonfireButton.querySelector(".bonfire-label").textContent = "長按火堆";
-    elements.resultPanel.hidden = true;
-    elements.rewardVoucher.hidden = true;
-    setProgress(0);
-    elements.playfield.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   function bindEvents() {
@@ -232,12 +286,14 @@
       }
     });
     elements.bonfireButton.addEventListener("blur", cancelHold);
-    elements.retryButton.addEventListener("click", resetGame);
   }
 
   function init() {
     setProgress(0);
     bindEvents();
+
+    const status = persistLegacyCompletion();
+    if (status.completed) showCompletedState(status.coupon, false);
   }
 
   init();
