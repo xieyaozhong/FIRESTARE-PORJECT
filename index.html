@@ -2,161 +2,320 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <meta name="theme-color" content="#140605">
-  <meta name="description" content="保留三層轉盤核心的寫實大型柏青哥機台。">
-  <title>星火混合式柏青哥 V6.7｜三層轉盤核心機台</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#17142c">
+  <meta name="description" content="星火計畫像素風排課系統：拖曳選課、點數結算、優惠券與開課管理。">
+  <title>星火計畫｜像素排課中心</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=v67-triple-crank-cabinet">
+  <link rel="stylesheet" href="./styles.css?v=spark-schedule-v1">
   <script>
-    (()=>{try{if("caches" in window)caches.keys().then(keys=>Promise.all(keys.map(key=>caches.delete(key))));if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(items=>items.forEach(item=>item.unregister()))}catch(_){}})();
+    (() => {
+      try {
+        if ("caches" in window) caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key))));
+        if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(items => items.forEach(item => item.unregister()));
+      } catch (_) {}
+    })();
   </script>
 </head>
 <body>
-  <div class="ambient ambient-red"></div>
-  <div class="ambient ambient-green"></div>
-
-  <div class="app">
-    <main class="machine-shell">
-      <header class="machine-topper">
-        <div class="topper-wing left-wing"><span></span><span></span><span></span></div>
-        <div class="topper-title">
-          <small>EXTREME MECHANICAL SERIES</small>
-          <strong>SWAMP RUSH</strong>
-          <b>TRIPLE CRANK</b>
-        </div>
-        <div class="topper-wing right-wing"><span></span><span></span><span></span></div>
-      </header>
-
-      <section class="machine-body">
-        <div class="lamp-column left-lamps" aria-hidden="true">
-          <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-        </div>
-
-        <div class="machine-frame">
-          <div class="frame-label top-label">TRIPLE CRANK CORE</div>
-          <canvas id="game" width="900" height="1200" aria-label="柏青哥遊戲區"></canvas>
-          <div class="glass-tint" aria-hidden="true"></div>
-          <div class="frame-screw screw-a"></div>
-          <div class="frame-screw screw-b"></div>
-          <div class="frame-screw screw-c"></div>
-          <div class="frame-screw screw-d"></div>
-        </div>
-
-        <div class="lamp-column right-lamps" aria-hidden="true">
-          <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-        </div>
-      </section>
-
-      <footer class="machine-deck">
-        <div class="deck-module risk-module">
-          <small>RISK LEVEL</small><strong>MAX</strong>
-        </div>
-        <div class="ball-tray">
-          <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-          <b>BALL RETURN</b>
-        </div>
-        <div class="deck-module jackpot-module">
-          <small>FINAL GATE</small><strong>×10</strong>
-        </div>
-      </footer>
-    </main>
-
-    <aside class="hud">
-      <div class="hero">
-        <div class="hero-kicker">V6.7 CABINET CONTROL TERMINAL</div>
-        <div class="logo">星火 TRIPLE CRANK PACHINKO</div>
-        <div class="sub">機台重新設計為上方大型招牌、中央玻璃盤面、左右燈柱與下方出珠托盤。盤面中央的三層轉盤完整保留，並作為整台機台的核心大獎機構。</div>
-      </div>
-
-      <div class="card score-card">
-        <div class="label">娛樂積分</div>
-        <div class="value" id="score">000000</div>
-        <div class="sub">最高紀錄：<b id="highScore">000000</b></div>
-      </div>
-
-      <div class="row compact">
-        <div class="card mini"><div class="label">剩餘彈珠</div><div class="value small" id="balls">30</div></div>
-        <div class="card mini"><div class="label">最高連擊</div><div class="value small" id="combo">0</div></div>
-      </div>
-
-      <div class="card crank-status">
-        <div class="label">三層轉盤系統</div>
-        <div class="crank-diagram" aria-hidden="true">
-          <i class="disc disc-one"></i><i class="disc disc-two"></i><i class="disc disc-three"></i>
-        </div>
-        <div class="sub">拉霸圖案會改變三層轉盤的綠色通關孔數量與最終獎勵。</div>
-      </div>
-
-      <div class="card fever-card" id="feverCard">
-        <div class="label">FEVER 能量</div>
-        <div class="meter"><div class="fill fever-fill" id="feverFill"></div></div>
-        <div class="sub" id="feverText">0 / 100</div>
-      </div>
-
-      <div class="card">
-        <div class="label">發射力道</div>
-        <div class="meter"><div class="fill" id="powerFill"></div></div>
-        <div class="sub" id="powerText">0%</div>
-      </div>
-
-      <button class="launch" id="launchBtn"><span>POWER LAUNCH</span><small>長按蓄力・放開發射</small></button>
-
-      <div class="row">
-        <button class="secondary" id="autoBtn">自動發射：關</button>
-        <button class="secondary" id="soundBtn">音效：開</button>
-      </div>
-      <div class="row">
-        <button class="secondary" id="addBtn">補充 10 顆</button>
-        <button class="secondary" id="fullscreenBtn">全螢幕</button>
-      </div>
-
-      <div class="card">
-        <div class="label">遊戲難度</div>
-        <select id="difficultySelect" class="control">
-          <option value="casual">休閒</option>
-          <option value="classic" selected>經典</option>
-          <option value="extreme">極限</option>
-        </select>
-      </div>
-
-      <div class="card">
-        <div class="label">本次挑戰任務</div>
-        <div class="mission" id="missionText">啟動 START 3 次</div>
-        <div class="meter"><div class="fill" id="missionFill"></div></div>
-      </div>
-
-      <div class="card stat-card">
-        <div class="label">生涯統計</div>
-        <div class="stats">
-          <div class="stat"><b id="launchStat">0</b><small>發射</small></div>
-          <div class="stat"><b id="startStat">0</b><small>START</small></div>
-          <div class="stat"><b id="jackpotStat">0</b><small>大獎</small></div>
-        </div>
-      </div>
-
-      <div class="card combo-guide">
-        <div class="label">玩法核心</div>
-        <div class="combo-row"><b>拉霸</b><span>命中 START 後抽取圖案組合。</span></div>
-        <div class="combo-row"><b>三層轉盤</b><span>依組合改變每層通關孔，連過三層取得大獎。</span></div>
-        <div class="combo-row"><b>黃金彈珠</b><span>得分槽、START 與轉盤獎勵全部 ×10。</span></div>
-        <div class="combo-row"><b>機械裝置</b><span>旋轉撥輪、彈板與救球桿持續改變球路。</span></div>
-      </div>
-
-      <button class="secondary accent" id="resetBtn">重新開始本局</button>
-
-      <div class="card legend">
-        <span><i class="dot cyan"></i>周圍彈性撞擊物</span>
-        <span><i class="dot gold"></i>黃金彈珠 ×10</span>
-        <span><i class="dot green"></i>三層轉盤通關孔</span>
-        <span><i class="dot pink"></i>START 拉霸入口</span>
-      </div>
-
-      <div class="notice">純娛樂物理模擬，積分不具現金價值。鍵盤：空白鍵蓄力、A 自動發射、M 音效、F 全螢幕。</div>
-    </aside>
+  <div class="pixel-sky" aria-hidden="true">
+    <i class="star star-a"></i><i class="star star-b"></i><i class="star star-c"></i>
+    <i class="star star-d"></i><i class="star star-e"></i><i class="star star-f"></i>
   </div>
 
-  <div class="toast" id="toast"></div>
-  <script src="./game-stable-v65.js?v=v67-triple-crank-cabinet" defer></script>
+  <div class="app-shell">
+    <header class="topbar pixel-panel">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">✦</div>
+        <div>
+          <p class="eyebrow">FIRESTAR LEARNING SYSTEM</p>
+          <h1>星火計畫・像素排課中心</h1>
+        </div>
+      </div>
+
+      <nav class="view-switch" aria-label="介面切換">
+        <button class="tab-btn is-active" type="button" data-view="user">🎒 用戶端</button>
+        <button class="tab-btn" type="button" data-view="admin">🛠 開課端</button>
+      </nav>
+
+      <div class="wallet-chip" title="目前星火點數">
+        <span>✦</span>
+        <strong id="headerPoints">0</strong>
+        <small>星火點數</small>
+      </div>
+    </header>
+
+    <main>
+      <section id="userView" class="view is-active" aria-labelledby="userViewTitle">
+        <div class="status-strip pixel-panel">
+          <div>
+            <p class="eyebrow">TODAY</p>
+            <h2 id="userViewTitle"><span id="todayDate">--</span> 的學習冒險</h2>
+          </div>
+          <div class="next-class" id="nextClassBox">
+            <span class="status-icon">⏳</span>
+            <div>
+              <small>即將到來的課程</small>
+              <strong id="nextClassText">尚未安排</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="schedule-grid">
+          <aside class="catalog pixel-panel" aria-labelledby="catalogTitle">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">COURSE INVENTORY</p>
+                <h3 id="catalogTitle">可選課程</h3>
+              </div>
+              <span class="count-badge" id="courseCount">0</span>
+            </div>
+
+            <label class="search-box">
+              <span>⌕</span>
+              <input id="courseSearch" type="search" placeholder="搜尋課名、老師或日期">
+            </label>
+
+            <div class="filter-row" id="categoryFilters" aria-label="課程分類篩選"></div>
+            <p class="drag-tip">拖曳課程到中央，手機也能按「加入」。</p>
+            <div id="courseList" class="course-list" aria-live="polite"></div>
+          </aside>
+
+          <section class="planner pixel-panel" aria-labelledby="plannerTitle">
+            <div class="planner-banner">
+              <span class="campfire" aria-hidden="true">🔥</span>
+              <div>
+                <p class="eyebrow">DROP TO BUILD YOUR PLAN</p>
+                <h3 id="plannerTitle">星火計畫區</h3>
+                <p>把想上的課拖進來，建立專屬排課單。</p>
+              </div>
+            </div>
+
+            <div id="dropZone" class="drop-zone" tabindex="0">
+              <div id="emptyPlan" class="empty-plan">
+                <div class="empty-icon">↘</div>
+                <strong>把課程卡片放到這裡</strong>
+                <span>選好的課程會依日期自動排列</span>
+              </div>
+              <div id="selectedList" class="selected-list"></div>
+            </div>
+
+            <div class="plan-footer">
+              <div>
+                <small>已選課程</small>
+                <strong><span id="selectedCount">0</span> 堂</strong>
+              </div>
+              <div>
+                <small>原始點數</small>
+                <strong><span id="grossPoints">0</span> 點</strong>
+              </div>
+              <div>
+                <small>優惠折抵</small>
+                <strong class="discount-text">−<span id="discountPoints">0</span> 點</strong>
+              </div>
+            </div>
+          </section>
+
+          <aside class="checkout pixel-panel" aria-labelledby="checkoutTitle">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">CHECKOUT TERMINAL</p>
+                <h3 id="checkoutTitle">點數與優惠</h3>
+              </div>
+            </div>
+
+            <div class="balance-card">
+              <span>目前持有</span>
+              <strong><b id="walletPoints">0</b> 點</strong>
+              <div class="pixel-meter"><i id="walletMeter"></i></div>
+            </div>
+
+            <div class="coupon-area">
+              <div class="subheading">
+                <h4>我的優惠券</h4>
+                <span id="couponCount">0 張</span>
+              </div>
+              <div id="couponList" class="coupon-list"></div>
+            </div>
+
+            <div class="checkout-total">
+              <span>本次結算</span>
+              <strong><b id="finalPoints">0</b> 點</strong>
+              <small id="checkoutHint">選擇課程後即可送出</small>
+            </div>
+
+            <button id="submitSchedule" class="primary-btn" type="button" disabled>
+              <span>送出並產生排課單</span>
+              <small>ENTER</small>
+            </button>
+            <button id="clearSelection" class="ghost-btn" type="button">清空目前選擇</button>
+          </aside>
+        </div>
+
+        <section class="history-panel pixel-panel" aria-labelledby="historyTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">MY SCHEDULES</p>
+              <h3 id="historyTitle">排課紀錄</h3>
+            </div>
+            <button id="clearHistory" class="mini-btn" type="button">清除紀錄</button>
+          </div>
+          <div id="historyList" class="history-list"></div>
+        </section>
+      </section>
+
+      <section id="adminView" class="view" aria-labelledby="adminViewTitle">
+        <div class="admin-hero pixel-panel">
+          <div>
+            <p class="eyebrow">COURSE OPERATOR CONSOLE</p>
+            <h2 id="adminViewTitle">開課端控制台</h2>
+            <p>新增任意課程與名額、發放星火點數及優惠券。資料會保存在這台裝置。</p>
+          </div>
+          <div class="admin-stats">
+            <div><span>課程</span><strong id="adminCourseStat">0</strong></div>
+            <div><span>總名額</span><strong id="adminSeatStat">0</strong></div>
+            <div><span>用戶點數</span><strong id="adminPointStat">0</strong></div>
+          </div>
+        </div>
+
+        <div class="admin-grid">
+          <section class="admin-card pixel-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">PUBLISH COURSE</p>
+                <h3>建立新課程</h3>
+              </div>
+            </div>
+
+            <form id="courseForm" class="pixel-form">
+              <label class="span-2">課程名稱
+                <input name="title" required maxlength="40" placeholder="例如：數學先修班">
+              </label>
+              <label>日期
+                <input name="date" type="date" required>
+              </label>
+              <label>時間
+                <input name="time" type="time" required value="19:00">
+              </label>
+              <label>授課老師
+                <input name="teacher" required maxlength="20" placeholder="例如：星火老師">
+              </label>
+              <label>課程分類
+                <select name="category">
+                  <option>數學</option>
+                  <option>英文</option>
+                  <option>圍棋</option>
+                  <option>其他</option>
+                </select>
+              </label>
+              <label>所需點數
+                <input name="cost" type="number" min="0" max="99999" value="300" required>
+              </label>
+              <label>每堂名額
+                <input name="seats" type="number" min="1" max="999" value="12" required>
+              </label>
+              <label>連續建立堂數
+                <input name="repeat" type="number" min="1" max="12" value="1" required>
+              </label>
+              <label>每堂間隔天數
+                <input name="interval" type="number" min="1" max="30" value="7" required>
+              </label>
+              <label class="span-2">課程備註
+                <textarea name="note" maxlength="100" placeholder="課前提醒、教材或上課地點"></textarea>
+              </label>
+              <button class="primary-btn span-2" type="submit">發佈課程</button>
+            </form>
+          </section>
+
+          <section class="admin-card pixel-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">RESOURCE DELIVERY</p>
+                <h3>發放資源</h3>
+              </div>
+            </div>
+
+            <form id="pointForm" class="resource-form">
+              <div class="resource-icon">✦</div>
+              <div>
+                <h4>發放星火點數</h4>
+                <p>點數會立刻加入用戶錢包。</p>
+              </div>
+              <input name="amount" type="number" min="1" max="99999" value="500" required aria-label="點數數量">
+              <input name="reason" maxlength="40" placeholder="發放原因（選填）" aria-label="發放原因">
+              <button class="secondary-btn" type="submit">發放點數</button>
+            </form>
+
+            <form id="couponForm" class="resource-form coupon-resource">
+              <div class="resource-icon">🎟</div>
+              <div>
+                <h4>發放優惠券</h4>
+                <p>可建立固定折抵或百分比折扣。</p>
+              </div>
+              <input name="name" maxlength="30" value="調課卷" required aria-label="優惠券名稱">
+              <select name="type" aria-label="優惠券種類">
+                <option value="flat">固定點數折抵</option>
+                <option value="percent">百分比折扣</option>
+              </select>
+              <input name="value" type="number" min="1" max="10000" value="120" required aria-label="優惠數值">
+              <input name="uses" type="number" min="1" max="99" value="1" required aria-label="可使用次數">
+              <button class="secondary-btn" type="submit">發放優惠券</button>
+            </form>
+          </section>
+        </div>
+
+        <section class="pixel-panel course-manager" aria-labelledby="managerTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">LIVE COURSE MANAGER</p>
+              <h3 id="managerTitle">已發佈課程</h3>
+            </div>
+            <div class="manager-actions">
+              <button id="sortCourses" class="mini-btn" type="button">依日期排序</button>
+              <button id="resetDemo" class="mini-btn danger" type="button">重置示範資料</button>
+            </div>
+          </div>
+          <div id="adminCourseList" class="admin-course-list"></div>
+        </section>
+
+        <section class="pixel-panel activity-panel" aria-labelledby="activityTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">SYSTEM LOG</p>
+              <h3 id="activityTitle">操作紀錄</h3>
+            </div>
+          </div>
+          <div id="activityList" class="activity-list"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <dialog id="scheduleDialog" class="schedule-dialog">
+    <div class="dialog-card">
+      <button id="closeDialog" class="dialog-close" type="button" aria-label="關閉">×</button>
+      <div class="receipt-head">
+        <span class="receipt-fire">🔥</span>
+        <p class="eyebrow">FIRESTAR SCHEDULE RECEIPT</p>
+        <h2>排課單總覽</h2>
+        <p id="receiptNumber">NO. ----</p>
+      </div>
+      <div id="receiptCourses" class="receipt-courses"></div>
+      <div class="receipt-summary">
+        <div><span>課程原價</span><strong id="receiptGross">0 點</strong></div>
+        <div><span>優惠折抵</span><strong id="receiptDiscount">−0 點</strong></div>
+        <div class="receipt-total"><span>實際扣除</span><strong id="receiptTotal">0 點</strong></div>
+        <div><span>剩餘點數</span><strong id="receiptBalance">0 點</strong></div>
+      </div>
+      <div class="dialog-actions">
+        <button id="copyReceipt" class="secondary-btn" type="button">複製排課內容</button>
+        <button id="finishReceipt" class="primary-btn" type="button">完成</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="./app.js?v=spark-schedule-v1" defer></script>
 </body>
 </html>
