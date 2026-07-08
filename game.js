@@ -3,6 +3,7 @@
 
   const STORAGE_KEY = "firestar-pixel-scheduler-v1";
   const HOLD_DURATION = 3000;
+  const CLIMAX_DELAY = 420;
   const REWARD_SOURCE = "spark-course-mini-game";
   const REWARD_POOL = [
     { name: "微光火種券", value: 40, theme: "ember", rarity: "普通", symbol: "✦", weight: 30 },
@@ -20,6 +21,7 @@
     progressText: $("#progressText"),
     holdTime: $("#holdTime"),
     holdHint: $("#holdHint"),
+    ritualStage: $("#ritualStage"),
     resultPanel: $("#resultPanel"),
     resultIcon: $("#resultIcon"),
     resultTitle: $("#resultTitle"),
@@ -35,9 +37,11 @@
 
   let state = loadState();
   let holding = false;
+  let completing = false;
   let completed = false;
   let holdStartedAt = 0;
   let animationFrame = 0;
+  let completionTimer = 0;
   let activePointerId = null;
   let lastMilestone = 0;
   let celebrationTimer = 0;
@@ -85,11 +89,55 @@
     return ignitionStatus(state);
   }
 
+  function clearTextSelection() {
+    try {
+      const selection = window.getSelection?.();
+      if (selection && selection.rangeCount) selection.removeAllRanges();
+    } catch {}
+  }
+
+  function preventNativeHold(event) {
+    event.preventDefault();
+    clearTextSelection();
+  }
+
   function setEnergyStage(progress) {
     elements.playfield.classList.remove("energy-warm", "energy-bright", "energy-max");
     if (progress >= 0.82) elements.playfield.classList.add("energy-max");
     else if (progress >= 0.5) elements.playfield.classList.add("energy-bright");
     else if (progress >= 0.18) elements.playfield.classList.add("energy-warm");
+  }
+
+  function setRitualStage(progress) {
+    elements.playfield.classList.remove(
+      "ritual-stage-1",
+      "ritual-stage-2",
+      "ritual-stage-3",
+      "ritual-stage-4",
+      "is-climax"
+    );
+
+    if (completed) {
+      elements.playfield.classList.add("ritual-stage-4");
+      elements.ritualStage.textContent = "星火已回應你的召喚";
+      return;
+    }
+
+    if (completing || progress >= 0.94) {
+      elements.playfield.classList.add("ritual-stage-4", "is-climax");
+      elements.ritualStage.textContent = completing ? "儀式完成・星火正在降臨" : "不要放開・迎接點亮";
+    } else if (progress >= 0.68) {
+      elements.playfield.classList.add("ritual-stage-3");
+      elements.ritualStage.textContent = "符文收束・星火與你共鳴";
+    } else if (progress >= 0.4) {
+      elements.playfield.classList.add("ritual-stage-2");
+      elements.ritualStage.textContent = "喚醒光環・維持心念";
+    } else if (progress > 0) {
+      elements.playfield.classList.add("ritual-stage-1");
+      elements.ritualStage.textContent = "凝聚火種・讓微光甦醒";
+    } else {
+      elements.ritualStage.textContent = "將手覆於火種之上";
+    }
   }
 
   function setProgress(progress) {
@@ -98,6 +146,7 @@
     elements.progressText.textContent = String(Math.round(safeProgress * 100));
     elements.holdTime.textContent = (safeProgress * HOLD_DURATION / 1000).toFixed(1);
     setEnergyStage(safeProgress);
+    setRitualStage(safeProgress);
   }
 
   function pickReward() {
@@ -195,23 +244,26 @@
 
   function showCompletedState(coupon, wasJustCompleted = false) {
     completed = true;
+    completing = false;
     holding = false;
     activePointerId = null;
+    window.clearTimeout(completionTimer);
     cancelAnimationFrame(animationFrame);
     setProgress(1);
 
     elements.playfield.classList.remove("is-holding");
-    elements.playfield.classList.add("is-complete", "is-locked");
+    elements.playfield.classList.add("is-complete", "is-locked", "ritual-stage-4");
     elements.bonfireButton.disabled = true;
     elements.bonfireButton.setAttribute("aria-disabled", "true");
     elements.bonfireButton.querySelector(".bonfire-label").textContent = "已點亮星火";
     elements.holdHint.textContent = "每位用戶只能點亮一次";
+    elements.ritualStage.textContent = "星火已回應你的召喚";
 
     renderVoucher(coupon);
     elements.resultIcon.textContent = coupon?.rewardSymbol || "🔥";
     elements.resultTitle.textContent = "已點亮星火";
     elements.resultMessage.textContent = wasJustCompleted
-      ? "星火回應了你的光，優惠券已同步到排課中心。每位用戶只能點亮一次。"
+      ? "儀式完成，星火回應了你的光。優惠券已同步到排課中心。"
       : "你已經完成過點亮星火，優惠券已發放；每位用戶僅能領取一次。";
     elements.resultPanel.hidden = false;
 
@@ -219,7 +271,7 @@
   }
 
   function updateHold() {
-    if (!holding || completed) return;
+    if (!holding || completing || completed) return;
     const elapsed = performance.now() - holdStartedAt;
     const progress = Math.min(1, elapsed / HOLD_DURATION);
     setProgress(progress);
@@ -231,7 +283,7 @@
     }
 
     if (progress >= 1) {
-      completeIgnition();
+      beginClimax();
       return;
     }
     animationFrame = requestAnimationFrame(updateHold);
@@ -244,15 +296,16 @@
       showCompletedState(status.coupon, false);
       return;
     }
-    if (completed || holding) return;
+    if (completed || completing || holding) return;
     if (event?.type === "pointerdown" && event.button !== 0) return;
 
+    preventNativeHold(event);
     holding = true;
     holdStartedAt = performance.now();
     lastMilestone = 0;
     elements.playfield.classList.add("is-holding");
-    elements.holdHint.textContent = "光環正在展開，繼續按住…";
-    elements.bonfireButton.querySelector(".bonfire-label").textContent = "持續長按";
+    elements.holdHint.textContent = "保持觸碰，讓儀式完成…";
+    elements.bonfireButton.querySelector(".bonfire-label").textContent = "維持心念";
 
     if (event?.pointerId !== undefined) {
       activePointerId = event.pointerId;
@@ -266,35 +319,64 @@
   }
 
   function cancelHold() {
-    if (!holding || completed) return;
+    if (!holding || completing || completed) return;
     holding = false;
     activePointerId = null;
     cancelAnimationFrame(animationFrame);
-    elements.playfield.classList.remove("is-holding");
-    elements.holdHint.textContent = "中途放開了，再長按一次即可重新點亮";
+    elements.playfield.classList.remove("is-holding", "is-climax");
+    elements.holdHint.textContent = "連結中斷，重新長按即可再次凝聚";
     elements.bonfireButton.querySelector(".bonfire-label").textContent = "長按火堆";
     setProgress(0);
   }
 
-  function completeIgnition() {
-    if (completed) return;
+  function beginClimax() {
+    if (completed || completing) return;
     holding = false;
+    completing = true;
     activePointerId = null;
     cancelAnimationFrame(animationFrame);
+    setProgress(1);
+    elements.playfield.classList.remove("is-holding");
+    elements.playfield.classList.add("is-climax", "ritual-stage-4");
+    elements.bonfireButton.querySelector(".bonfire-label").textContent = "迎接星火";
+    elements.holdHint.textContent = "儀式已完成，星火正在降臨…";
+    elements.ritualStage.textContent = "儀式完成・星火正在降臨";
+    if (navigator.vibrate) navigator.vibrate([25, 35, 55]);
 
+    completionTimer = window.setTimeout(completeIgnition, CLIMAX_DELAY);
+  }
+
+  function completeIgnition() {
+    if (completed) return;
     const reward = pickReward();
     const result = issueReward(reward);
     showCompletedState(result.coupon, result.created);
 
     if (result.created) {
-      elements.resultMessage.textContent = `星火回應了你的光，獲得「${result.coupon.name}」${result.coupon.value} 點通用優惠券，已同步到排課中心。每位用戶限一次。`;
-      if (navigator.vibrate) navigator.vibrate([40, 45, 100]);
+      elements.resultMessage.textContent = `儀式完成，你獲得「${result.coupon.name}」${result.coupon.value} 點通用優惠券，已同步到排課中心。`;
+      if (navigator.vibrate) navigator.vibrate([45, 45, 110]);
     }
     elements.resultPanel.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  function bindNativeGestureGuards() {
+    ["contextmenu", "selectstart", "dragstart"].forEach(type => {
+      elements.playfield.addEventListener(type, preventNativeHold, { passive: false });
+    });
+
+    elements.bonfireButton.addEventListener("touchstart", preventNativeHold, { passive: false });
+    elements.playfield.addEventListener("touchmove", event => {
+      if (holding || completing) preventNativeHold(event);
+    }, { passive: false });
+    elements.playfield.addEventListener("gesturestart", preventNativeHold, { passive: false });
+
+    document.addEventListener("selectionchange", () => {
+      if (holding || completing) clearTextSelection();
+    });
+  }
+
   function bindEvents() {
-    elements.bonfireButton.addEventListener("contextmenu", event => event.preventDefault());
+    bindNativeGestureGuards();
     elements.bonfireButton.addEventListener("pointerdown", event => {
       event.preventDefault();
       beginHold(event);
