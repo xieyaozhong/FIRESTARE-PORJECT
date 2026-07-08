@@ -7,7 +7,7 @@
   <meta name="description" content="完成星火小遊戲，領取指定課程優惠券。">
   <title>星火計畫｜星火收集挑戰</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./game.css?v=spark-game-v1">
+  <link rel="stylesheet" href="./game.css?v=spark-game-v2">
 </head>
 <body>
   <div class="sky" aria-hidden="true">
@@ -48,7 +48,7 @@
           <div class="fire-icon" aria-hidden="true">🔥</div>
           <h2>準備好了嗎？</h2>
           <p>點擊遊戲區內出現的星火，20 秒內收集 12 個即可過關。</p>
-          <button id="startButton" class="primary-btn" type="button">開始挑戰</button>
+          <button id="startButton" class="primary-btn" type="button">點亮星火</button>
         </div>
       </div>
 
@@ -60,6 +60,28 @@
       <p class="eyebrow">CHALLENGE RESULT</p>
       <h2 id="resultTitle">挑戰完成</h2>
       <p id="resultMessage"></p>
+
+      <article id="rewardVoucher" class="reward-voucher" hidden aria-label="星火課程優惠券">
+        <span class="voucher-notch voucher-notch-left" aria-hidden="true"></span>
+        <span class="voucher-notch voucher-notch-right" aria-hidden="true"></span>
+        <div class="voucher-emblem" aria-hidden="true">
+          <span>✦</span>
+          <small>FIRE</small>
+        </div>
+        <div class="voucher-copy">
+          <p>FIRESTAR QUEST REWARD</p>
+          <h3 id="rewardCouponName">星火闖關券</h3>
+          <strong id="rewardCourseName">指定課程</strong>
+          <small id="rewardCourseTime">課程時間</small>
+          <small id="rewardCouponCode" class="voucher-code">NO. --------</small>
+        </div>
+        <div class="voucher-value">
+          <small>折抵</small>
+          <strong><span id="rewardCouponValue">100</span></strong>
+          <small>點</small>
+        </div>
+      </article>
+
       <div class="result-actions">
         <button id="retryButton" class="secondary-btn" type="button">再玩一次</button>
         <a id="claimLink" class="primary-btn" href="./index.html">回排課中心使用優惠券</a>
@@ -67,6 +89,6 @@
     </section>
   </main>
 
-  <script src="./game.js?v=spark-game-v1" defer></script>
+  <script src="./game.js?v=spark-game-v2" defer></script>
 </body>
 </html>
