@@ -16,6 +16,6 @@
   }
 
   loadScript("./app-reschedule-v1.js?v=spark-reschedule-v2", () => {
-    loadScript("./app-upcoming-redemption-v1.js?v=spark-redemption-v1");
+    loadScript("./app-upcoming-redemption-v1.js?v=spark-redemption-v2");
   });
 })();
