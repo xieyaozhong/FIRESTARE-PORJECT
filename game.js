@@ -2,8 +2,8 @@
   "use strict";
 
   const STORAGE_KEY = "firestar-pixel-scheduler-v1";
-  const HOLD_DURATION = 3000;
-  const CLIMAX_DELAY = 420;
+  const HOLD_DURATION = 5000;
+  const CLIMAX_DELAY = 650;
   const REWARD_SOURCE = "spark-course-mini-game";
   const REWARD_POOL = [
     { name: "微光火種券", value: 40, theme: "ember", rarity: "普通", symbol: "✦", weight: 30 },
