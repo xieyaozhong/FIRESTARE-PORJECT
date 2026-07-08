@@ -137,7 +137,10 @@
       const item = (state.history || []).find(history => history.number === number);
       $$(".history-courses > div b", card).forEach((element, index) => {
         const course = item?.courses?.[index];
-        if (course) element.textContent = timeRange(course);
+        if (course) {
+          const range = timeRange(course);
+          if (element.textContent !== range) element.textContent = range;
+        }
       });
     });
 
