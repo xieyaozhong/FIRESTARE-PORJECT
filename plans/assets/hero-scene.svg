@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 900" shape-rendering="crispEdges">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#070b27"/><stop offset=".62" stop-color="#172a58"/><stop offset="1" stop-color="#0c1732"/></linearGradient><linearGradient id="fire" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff4a7"/><stop offset=".45" stop-color="#ffc34f"/><stop offset="1" stop-color="#ee6832"/></linearGradient></defs>
+<rect width="720" height="900" fill="url(#sky)"/>
+<g fill="#fff"><rect x="84" y="76" width="4" height="4"/><rect x="174" y="137" width="5" height="5"/><rect x="277" y="91" width="3" height="3"/><rect x="415" y="65" width="5" height="5"/><rect x="552" y="118" width="4" height="4"/><rect x="640" y="64" width="6" height="6"/><rect x="477" y="186" width="3" height="3"/><rect x="119" y="220" width="3" height="3"/></g>
+<g fill="#ffc95f"><rect x="501" y="83" width="8" height="8"/><rect x="616" y="184" width="7" height="7"/><rect x="398" y="153" width="6" height="6"/><rect x="261" y="202" width="5" height="5"/></g>
+<path d="M616 184L552 118L501 83L415 65L398 153L477 186" fill="none" stroke="#8fb6ff" stroke-width="3" stroke-dasharray="7 8" opacity=".62"/>
+<path d="M0 556L107 453L197 520L324 386L443 505L555 428L720 555V900H0Z" fill="#14254c"/><path d="M0 628L122 542L239 602L362 491L475 589L606 504L720 590V900H0Z" fill="#0e1b3a"/><path d="M0 709L133 641L251 679L379 604L493 672L612 616L720 664V900H0Z" fill="#09132d"/>
+<g fill="#071026"><path d="M65 622l25-67 25 67h-15l20 47H60l20-47z"/><path d="M141 666l22-58 22 58h-13l18 42h-55l18-42z"/><path d="M585 600l27-74 27 74h-16l21 51h-64l21-51z"/><path d="M635 649l24-64 24 64h-14l19 45h-58l19-45z"/></g>
+<ellipse cx="510" cy="785" rx="145" ry="53" fill="#e78235" opacity=".16"/><g><rect x="457" y="810" width="108" height="14" fill="#6f3b25" transform="rotate(13 511 817)"/><rect x="457" y="810" width="108" height="14" fill="#8f4d29" transform="rotate(-13 511 817)"/><rect x="491" y="729" width="34" height="82" fill="url(#fire)"/><rect x="470" y="759" width="33" height="51" fill="#ee6734"/><rect x="516" y="764" width="33" height="46" fill="#ffd257"/><rect x="496" y="696" width="23" height="58" fill="#fff3aa"/></g>
+<g fill="#ffc95f"><rect x="487" y="662" width="7" height="7"/><rect x="543" y="695" width="6" height="6"/><rect x="456" y="712" width="5" height="5"/><rect x="566" y="650" width="4" height="4"/></g>
+<rect x="40" y="40" width="640" height="820" fill="none" stroke="#ffc95f" stroke-opacity=".12" stroke-width="3"/>
+</svg>
