@@ -1,12 +1,136 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080c22"><meta name="description" content="星火計畫完整藍圖：星火、星空、傳火、星河與燎原計畫。"><title>星火計畫｜完整計畫藍圖</title><link rel="stylesheet" href="./plans.css"></head><body>
-<a class="skip" href="#plans">跳到計畫選單</a><div class="stars" aria-hidden="true"></div>
-<header><a class="brand" href="#top"><b>🔥</b><span>星火計畫</span></a><nav><a href="./starlight.html">星光回饋</a><a href="#roadmap">發展路徑</a><button id="share">分享</button></nav></header>
-<main id="top">
-<section class="hero"><div><p class="eyebrow">SPARK PROJECT · COMPLETE BLUEPRINT</p><h1>星火計畫</h1><h2>點亮心中的光，讓成長被看見、被累積、被傳遞。</h2><p>從教育起點出發：第一階段建立課程與回饋循環；第二階段同時深耕能力與傳遞善意；第三階段走向跨域共創與社會擴散。</p><div class="actions"><a class="primary" href="#plans">探索五大計畫</a><a class="secondary" href="../" target="_blank" rel="noopener">前往排課中心</a></div></div><div class="orbit" aria-hidden="true"><i></i><i></i><i></i><strong>🔥</strong><span>能力深耕</span><span>善意傳遞</span><span>跨域共創</span><span>社會擴散</span></div></section>
-<section id="plans" class="section"><div class="heading"><p class="eyebrow">PLAN NAVIGATION</p><h2>用按鈕看懂完整計畫</h2><p>先選擇階段，再點計畫按鈕。每個細項包含定位、服務對象、核心產品、執行流程、商業模式及成果指標。</p></div>
-<div class="filters" role="tablist"><button class="active" data-stage="all">全部計畫<small>星火到燎原</small></button><button data-stage="2">第二階段<small>星空 × 傳火</small></button><button data-stage="3">第三階段<small>星河 × 燎原</small></button></div>
-<div id="planButtons" class="plan-buttons"></div>
-<article id="detailPanel" class="detail" hidden tabindex="-1"><div class="detail-head"><span id="detailIcon"></span><div><h3 id="detailTitle"></h3><p id="detailSubtitle"></p></div><button id="close" aria-label="關閉">✕</button></div><div id="tabs" class="tabs"></div><div id="content" class="content"></div></article></section>
-<section id="roadmap" class="section"><div class="heading"><p class="eyebrow">THREE-STAGE ROADMAP</p><h2>三階段發展路徑</h2><p>每一階段都要先通過驗證門檻，再擴張下一個計畫。</p></div><div class="roadmap"><article><b>01</b><h3>點亮起點</h3><p>驗證課程、點數、付費、留存與星光回饋，建立第一個營運閉環。</p></article><article><b>02</b><h3>雙軌並行</h3><p>星空深耕能力；傳火培養穩定、善意與行動，兩者共用平台但分開衡量。</p></article><article><b>03</b><h3>整合與擴散</h3><p>星河推進跨域共創；燎原建立授權、帶領者與城市節點。</p></article></div></section>
-<section class="cta"><p class="eyebrow">LIGHT THE NEXT SPARK</p><h2>不是等待黑暗消失，而是一起把光點亮。</h2><p>本頁為獨立計畫導覽，不讀取也不改動排課中心的課程、點數、優惠券或瀏覽器資料。</p><div class="actions"><a class="primary" href="../" target="_blank" rel="noopener">體驗排課中心</a><button id="copy" class="secondary">複製本頁連結</button></div></section></main>
-<footer><span>© 星火計畫 · Spark Project</span><span>獨立導覽頁｜與排課系統程式及資料分離</span></footer><div id="toast" class="toast" role="status"></div><script src="./plans.js"></script><script src="./starlight-link.js"></script></body></html>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#070a19">
+  <meta name="description" content="星火計畫完整藍圖：從星火、星空與傳火，延伸至星河與燎原計畫。">
+  <title>星火計畫｜完整計畫藍圖</title>
+  <link rel="stylesheet" href="./plans.css">
+  <link rel="stylesheet" href="./plans-theme.css">
+  <link rel="stylesheet" href="./plans-components.css">
+  <link rel="stylesheet" href="./plans-responsive.css">
+</head>
+<body>
+  <a class="skip" href="#plans">跳到計畫選單</a>
+  <div class="stars" aria-hidden="true"></div>
+  <div class="aurora" aria-hidden="true"></div>
+
+  <header>
+    <a class="brand" href="#top" aria-label="回到星火計畫首頁">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>星火計畫</span>
+    </a>
+    <nav aria-label="主要導覽">
+      <a href="./starlight.html">星光回饋</a>
+      <a href="#roadmap">發展路徑</a>
+      <button id="share" type="button">分享</button>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">SPARK PROJECT · COMPLETE BLUEPRINT</p>
+        <h1 id="hero-title">星火計畫</h1>
+        <h2>點亮心中的光，<br>讓成長被看見。</h2>
+        <p class="hero-lead">從一堂課、一個作品與一次真實回饋開始，建立能持續學習、傳遞善意，並逐步擴張的成長生態。</p>
+        <div class="hero-principles" aria-label="核心原則">
+          <span>看見努力</span><span>累積能力</span><span>傳遞影響</span>
+        </div>
+        <div class="actions">
+          <a class="primary" href="#plans">探索五大計畫</a>
+          <a class="secondary" href="../" target="_blank" rel="noopener">前往排課中心</a>
+        </div>
+      </div>
+
+      <figure class="hero-art" aria-label="像素風星空、山脈與篝火場景">
+        <img src="./assets/hero-scene.svg" alt="星空下的山林與篝火，星光向上連成成長路徑">
+        <figcaption><span>START WITH ONE SPARK</span><b>從一點微光開始</b></figcaption>
+      </figure>
+    </section>
+
+    <section class="micro-summary" aria-label="計畫核心循環">
+      <article><span class="mini-icon course" aria-hidden="true"></span><div><small>COURSE</small><strong>課程與行動</strong></div></article>
+      <i aria-hidden="true"></i>
+      <article><span class="mini-icon growth" aria-hidden="true"></span><div><small>GROWTH</small><strong>作品與成長</strong></div></article>
+      <i aria-hidden="true"></i>
+      <article><span class="mini-icon feedback" aria-hidden="true"></span><div><small>FEEDBACK</small><strong>星光與回饋</strong></div></article>
+    </section>
+
+    <section id="plans" class="section plans-section">
+      <div class="heading">
+        <p class="eyebrow">PLAN NAVIGATION</p>
+        <h2>用按鈕探索完整計畫</h2>
+        <p>先選擇階段，再點擊計畫圖騰。每個計畫皆整理定位、服務對象、核心產品、執行流程、商業模式與成果指標。</p>
+      </div>
+
+      <div class="filters" role="tablist" aria-label="計畫階段篩選">
+        <button class="active" data-stage="all" type="button">全部計畫<small>星火到燎原</small></button>
+        <button data-stage="2" type="button">第二階段<small>星空 × 傳火</small></button>
+        <button data-stage="3" type="button">第三階段<small>星河 × 燎原</small></button>
+      </div>
+
+      <div id="planButtons" class="plan-buttons"></div>
+
+      <article id="detailPanel" class="detail" hidden tabindex="-1">
+        <div class="detail-head">
+          <span id="detailIcon" class="detail-icon" aria-hidden="true"></span>
+          <div><h3 id="detailTitle"></h3><p id="detailSubtitle"></p></div>
+          <button id="close" type="button" aria-label="關閉計畫內容">✕</button>
+        </div>
+        <div id="tabs" class="tabs"></div>
+        <div id="content" class="content"></div>
+      </article>
+    </section>
+
+    <section id="roadmap" class="section roadmap-section">
+      <div class="heading">
+        <p class="eyebrow">THREE-STAGE ROADMAP</p>
+        <h2>先驗證，再深耕，最後擴散</h2>
+        <p>每一階段都有清楚的成果門檻。只有當產品、教學、安全與單位經濟被驗證後，才進入下一階段。</p>
+      </div>
+      <div class="roadmap">
+        <article><b>01</b><span class="road-icon spark"></span><small>第一階段</small><h3>點亮起點</h3><p>驗證課程、點數、付費、留存與星光回饋，建立第一個營運閉環。</p></article>
+        <article><b>02</b><span class="road-icon twin"></span><small>第二階段</small><h3>雙軌並行</h3><p>星空深耕能力；傳火培養穩定、善意與行動，兩者共用平台但分開衡量。</p></article>
+        <article><b>03</b><span class="road-icon network"></span><small>第三階段</small><h3>整合與擴散</h3><p>星河推進跨域共創；燎原建立授權、帶領者與城市節點。</p></article>
+      </div>
+    </section>
+
+    <section class="starlight-preview" aria-labelledby="starlight-title">
+      <div>
+        <p class="eyebrow">STARLIGHT FEEDBACK</p>
+        <h2 id="starlight-title">讓成果不只是一個數字</h2>
+        <p>重要的作品、突破與感受，可在本人及家長同意後整理成星光回饋。支持者看見的不是抽象口號，而是真實發生的改變。</p>
+        <a class="text-link" href="./starlight.html">查看星光回饋範例 <span>→</span></a>
+      </div>
+      <div class="postcard-stack" aria-hidden="true">
+        <i></i><i></i><i></i>
+        <div><span>✦</span><strong>今天，我完成了<br>以前不敢做的事。</strong><small>STARLIGHT NOTE · 01</small></div>
+      </div>
+    </section>
+
+    <section class="empty-fire" aria-labelledby="empty-fire-title">
+      <img src="./assets/empty-campfire.svg" alt="星空下尚未點燃的空篝火">
+      <div class="empty-fire-copy">
+        <p class="eyebrow">THE NEXT SPARK</p>
+        <h2 id="empty-fire-title">這裡還有一座空篝火</h2>
+        <p>它等待的不是一位完美的人，而是下一個願意靠近、放下一點光的人。</p>
+        <div class="actions">
+          <a class="primary" href="../" target="_blank" rel="noopener">體驗排課中心</a>
+          <button id="copy" class="secondary" type="button">複製本頁連結</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>© 星火計畫 · Spark Project</span>
+    <span>獨立計畫導覽｜不讀取、不修改排課系統資料</span>
+  </footer>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="./plans.js"></script>
+  <script src="./starlight-link.js"></script>
+  <script src="./visual-icons.js"></script>
+</body>
+</html>
