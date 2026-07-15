@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+  <title>正在完成 Google 登入｜星火計畫</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: #11152e; color: #fff8e8; }
+    main { width: min(34rem, calc(100% - 3rem)); padding: 2rem; border: 3px solid #fff8e8; border-radius: 14px; background: #232958; box-shadow: 8px 8px 0 #7c5cff; text-align: center; }
+    h1 { margin: 0 0 .75rem; font-size: clamp(1.35rem, 4vw, 2rem); }
+    p { margin: 0; line-height: 1.7; color: #d9dcff; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>正在完成 Google 登入</h1>
+    <p id="status">請稍候，系統正將你安全帶回星火計畫。</p>
+    <noscript>請啟用 JavaScript 後重新登入。</noscript>
+  </main>
+  <script>
+    (() => {
+      const destination = new URL("https://firestar-learning-system.yao1230.chatgpt.site/api/auth/google/callback");
+      const incoming = new URLSearchParams(window.location.search);
+      const allowedParameters = [
+        "code",
+        "state",
+        "error",
+        "error_description",
+        "error_uri",
+        "scope",
+        "authuser",
+        "prompt"
+      ];
+
+      for (const key of allowedParameters) {
+        const value = incoming.get(key);
+        if (value !== null) destination.searchParams.set(key, value);
+      }
+
+      if (!destination.searchParams.has("state")) {
+        document.getElementById("status").textContent =
+          "登入狀態已遺失，請回到星火計畫重新登入。";
+        return;
+      }
+
+      window.location.replace(destination.href);
+    })();
+  </script>
+</body>
+</html>
