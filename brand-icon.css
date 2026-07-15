@@ -1,0 +1,39 @@
+/* Firestar brand icon direction and presentation */
+.brand-mark {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  font-size: 0 !important;
+}
+
+.brand-mark::before {
+  content: "";
+  display: block;
+  width: 74%;
+  height: 74%;
+  background: url("./icon.svg?v=firestar-flame-v2") center / contain no-repeat;
+  transform: translateX(2px) rotate(4deg);
+  transform-origin: 50% 72%;
+  filter: drop-shadow(0 5px 8px rgba(80, 33, 21, .28));
+}
+
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  z-index: -1;
+  border-radius: 13px;
+  background: radial-gradient(circle at 68% 24%, rgba(255,255,255,.36), transparent 42%);
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .brand:hover .brand-mark::before {
+    transform: translate(3px, -1px) rotate(7deg) scale(1.03);
+    transition: transform .22s ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-mark::before { transition: none !important; }
+}
