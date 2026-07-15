@@ -40,6 +40,16 @@
         if (value !== null) destination.searchParams.set(key, value);
       }
 
+      const issuer = incoming.get("iss");
+      if (issuer !== null) {
+        if (issuer !== "https://accounts.google.com") {
+          document.getElementById("status").textContent =
+            "登入來源驗證失敗，請回到星火計畫重新登入。";
+          return;
+        }
+        destination.searchParams.set("iss", issuer);
+      }
+
       if (!destination.searchParams.has("state")) {
         document.getElementById("status").textContent =
           "登入狀態已遺失，請回到星火計畫重新登入。";
