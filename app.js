@@ -6,6 +6,11 @@
   polishStyle.href = "./visual-polish.css?v=firestar-polish-v1";
   document.head.appendChild(polishStyle);
 
+  const brandIconStyle = document.createElement("link");
+  brandIconStyle.rel = "stylesheet";
+  brandIconStyle.href = "./brand-icon.css?v=firestar-flame-v2";
+  document.head.appendChild(brandIconStyle);
+
   function loadScript(src, onload) {
     const script = document.createElement("script");
     script.src = src;
