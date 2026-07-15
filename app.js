@@ -1,6 +1,11 @@
 (() => {
   "use strict";
 
+  const polishStyle = document.createElement("link");
+  polishStyle.rel = "stylesheet";
+  polishStyle.href = "./visual-polish.css?v=firestar-polish-v1";
+  document.head.appendChild(polishStyle);
+
   function loadScript(src, onload) {
     const script = document.createElement("script");
     script.src = src;
