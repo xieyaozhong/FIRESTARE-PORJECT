@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#070a19">
+  <meta name="description" content="星火計畫數學能力技能樹：探索、解鎖並記錄每一項數學細能力。">
+  <title>數學能力技能樹｜星火計畫</title>
+  <link rel="stylesheet" href="./skill-tree.css">
+</head>
+<body>
+  <div class="stars" aria-hidden="true"></div>
+  <header>
+    <a class="brand" href="../plans/"><span class="brand-mark">✦</span><span>星火計畫</span></a>
+    <nav>
+      <a href="../plans/">計畫總覽</a>
+      <a href="../" target="_blank" rel="noopener">排課中心</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">MATHEMATICS SKILL CONSTELLATION</p>
+        <h1>數學能力技能樹</h1>
+        <p class="lead">把「數學不好」拆成一個個可觀察、可練習、可解鎖的能力節點。每個節點都有前置技能、熟練標準、常見錯誤與延伸方向。</p>
+        <div class="legend" aria-label="技能節點類型">
+          <span data-type="core">核心</span><span data-type="concept">概念</span><span data-type="technique">技術</span><span data-type="application">應用</span><span data-type="boss">整合挑戰</span>
+        </div>
+      </div>
+      <aside class="hero-panel">
+        <div class="orb"><i></i><i></i><strong id="heroProgress">0%</strong></div>
+        <p>完成節點後，後續能力會自動解鎖。進度只儲存在目前瀏覽器。</p>
+      </aside>
+    </section>
+
+    <section class="dashboard" aria-label="技能樹控制面板">
+      <div class="stats">
+        <article><small>已完成</small><strong id="doneCount">0</strong></article>
+        <article><small>可解鎖</small><strong id="openCount">0</strong></article>
+        <article><small>總節點</small><strong id="totalCount">0</strong></article>
+        <article><small>目前分支</small><strong id="branchProgress">0%</strong></article>
+      </div>
+      <div class="controls">
+        <label class="search"><span>搜尋技能</span><input id="searchInput" type="search" placeholder="例如：分數、方程式、證明、機率"></label>
+        <select id="gradeFilter" aria-label="學習階段篩選">
+          <option value="all">全部階段</option>
+          <option value="小學">小學基礎</option>
+          <option value="國中">國中</option>
+          <option value="高中">高中</option>
+          <option value="競賽">競賽與進階</option>
+        </select>
+        <button id="exportBtn" type="button">匯出進度</button>
+        <button id="importBtn" type="button">匯入進度</button>
+        <input id="importFile" type="file" accept="application/json" hidden>
+        <button id="resetBtn" class="danger" type="button">重設</button>
+      </div>
+    </section>
+
+    <section class="branch-nav-wrap">
+      <div id="branchNav" class="branch-nav" role="tablist" aria-label="數學技能分支"></div>
+      <p id="branchSummary" class="branch-summary"></p>
+    </section>
+
+    <section class="tree-shell">
+      <div class="tree-toolbar">
+        <div><span class="status-dot locked"></span>未解鎖 <span class="status-dot open"></span>可學習 <span class="status-dot complete"></span>已完成</div>
+        <button id="centerTree" type="button">回到起點</button>
+      </div>
+      <div id="treeViewport" class="tree-viewport" tabindex="0" aria-label="可水平捲動的數學技能樹">
+        <div id="treeSurface" class="tree-surface">
+          <svg id="connections" aria-hidden="true"></svg>
+          <div id="treeGrid" class="tree-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="integration-note">
+      <div>
+        <p class="eyebrow">ASSESSMENT READY</p>
+        <h2>預留數學評測器串接</h2>
+        <p>匯出的 JSON 會保存已完成節點。未來數學評測器可以直接回寫節點熟練度、錯誤類型與建議學習路徑。</p>
+      </div>
+      <code>{ completed: ["integer_ops", "linear_eq"], mastery: {...} }</code>
+    </section>
+  </main>
+
+  <dialog id="skillDialog">
+    <form method="dialog" class="dialog-card">
+      <button class="dialog-close" value="cancel" aria-label="關閉">✕</button>
+      <div class="dialog-head">
+        <span id="dialogIcon" class="skill-glyph"></span>
+        <div><p id="dialogMeta" class="eyebrow"></p><h2 id="dialogTitle"></h2><p id="dialogDesc"></p></div>
+      </div>
+      <div class="dialog-grid">
+        <section><h3>熟練標準</h3><ul id="masteryList"></ul></section>
+        <section><h3>常見卡點</h3><ul id="errorList"></ul></section>
+        <section><h3>前置節點</h3><div id="prereqList" class="chip-list"></div></section>
+        <section><h3>解鎖後續</h3><div id="unlockList" class="chip-list"></div></section>
+      </div>
+      <div class="example-box"><small>範例任務</small><strong id="exampleText"></strong></div>
+      <div class="dialog-actions">
+        <span id="lockMessage"></span>
+        <button id="completeBtn" type="button">標記為已完成</button>
+      </div>
+    </form>
+  </dialog>
+
+  <footer><span>© 星火計畫 · Spark Project</span><span>獨立技能樹頁面｜不修改排課系統資料</span></footer>
+  <script src="./skill-tree.js"></script>
+</body>
+</html>
