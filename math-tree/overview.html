@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#071326">
+  <meta name="description" content="星火計畫數學技能樹總覽：統整七大能力分支、技能名稱與彼此關係。">
+  <title>數學技能樹總覽｜星火計畫</title>
+  <style>
+    :root{--bg:#071326;--panel:#0e1d38e8;--text:#edf6ff;--muted:#aebfd8;--gold:#ffd66f;--blue:#70d0ff;--green:#8ce2a3;--purple:#c5a5ff;--orange:#ffb66f;--teal:#78e7de;--pink:#ff9eaf;--line:#9ad8ff}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--text);font-family:"PingFang TC","Microsoft JhengHei",system-ui,sans-serif;background:radial-gradient(circle at 20% 10%,#315eaa30,transparent 30%),radial-gradient(circle at 80% 15%,#6d4ead24,transparent 28%),linear-gradient(180deg,#10284d,#071326 58%,#050d1b);min-height:100vh}.stars{position:fixed;inset:0;pointer-events:none;opacity:.45;background-image:radial-gradient(circle,#fff 0 1px,transparent 1.5px),radial-gradient(circle,#ffd66f 0 1px,transparent 1.5px);background-size:145px 145px,220px 220px;background-position:18px 26px,110px 70px;mask-image:linear-gradient(#000,transparent 95%)}a{color:inherit}.shell{width:min(1500px,calc(100% - 28px));margin:auto}header{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:14px 0;background:#071326bd;backdrop-filter:blur(16px)}.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:900;letter-spacing:.1em}.brand-mark{display:grid;place-items:center;width:42px;height:42px;border:1px solid #ffd66f66;border-radius:13px;background:#ffd66f14;color:var(--gold)}nav{display:flex;gap:8px}nav a{min-height:42px;display:inline-flex;align-items:center;padding:0 15px;text-decoration:none;border:1px solid #ffffff20;border-radius:12px;background:#0a1730d9;font-weight:800}.hero{text-align:center;padding:65px 12px 35px}.eyebrow{margin:0 0 12px;color:var(--gold);font-size:.78rem;font-weight:900;letter-spacing:.22em}.hero h1{margin:0;font-size:clamp(2.5rem,7vw,5.5rem);line-height:1.05;letter-spacing:.06em;background:linear-gradient(#fff9e8,#ffd66f 65%,#e99639);background-clip:text;color:transparent}.hero h2{margin:18px 0 0;font-size:clamp(1.05rem,2.2vw,1.65rem);color:#dceeff}.hero p{max-width:900px;margin:14px auto 0;color:var(--muted);line-height:1.8}.overview{position:relative;min-height:1040px;margin:20px 0 28px;padding:24px;border:1px solid #ffffff1b;border-radius:30px;background:linear-gradient(145deg,#0b1934d9,#071226e8);box-shadow:0 30px 90px #0007;overflow:hidden}.map-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.map-lines .main{fill:none;stroke-width:4;filter:drop-shadow(0 0 5px currentColor)}.map-lines .cross{fill:none;stroke:#ffffff30;stroke-width:2;stroke-dasharray:8 9}.core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;width:270px;height:270px;border:2px solid #8dd9ff88;border-radius:50%;display:grid;place-items:center;text-align:center;padding:35px;background:radial-gradient(circle,#4ba8ff2f,#102344f2 63%,#09162ee8);box-shadow:0 0 0 11px #508cff12,0 0 75px #559cff30}.core i{font-style:normal;font-size:3.2rem;color:var(--gold);text-shadow:0 0 22px #ffd66f88}.core h2{font-size:2rem;margin:5px 0}.core p{margin:0;color:var(--muted);font-size:.88rem;line-height:1.65}.branch{position:absolute;z-index:3;width:315px;padding:18px;border:1px solid #ffffff20;border-radius:21px;background:var(--panel);box-shadow:0 16px 38px #0006;backdrop-filter:blur(5px);transition:.2s}.branch:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 20px 45px #0008,0 0 24px var(--glow)}.branch-head{display:flex;align-items:center;gap:12px;margin-bottom:13px}.branch b{display:grid;place-items:center;width:43px;height:43px;border-radius:13px;background:var(--accent);color:#071326;font-size:1.15rem}.branch h3{margin:0;font-size:1.55rem}.skills{display:grid;grid-template-columns:1fr 1fr;gap:7px}.skills span{padding:7px 9px;border:1px solid #ffffff12;border-radius:10px;background:#ffffff08;font-size:.82rem;color:#eef6ff}.number{--accent:var(--blue);--glow:#70d0ff35;left:50%;top:35px;transform:translateX(-50%)}.algebra{--accent:var(--green);--glow:#8ce2a335;right:55px;top:135px}.geometry{--accent:var(--purple);--glow:#c5a5ff35;right:30px;top:410px}.functions{--accent:var(--orange);--glow:#ffb66f35;right:75px;bottom:145px}.statistics{--accent:var(--teal);--glow:#78e7de35;left:50%;bottom:32px;transform:translateX(-50%)}.logic{--accent:var(--pink);--glow:#ff9eaf35;left:55px;bottom:145px}.modeling{--accent:var(--gold);--glow:#ffd66f35;left:30px;top:410px}.number:hover,.statistics:hover{transform:translateX(-50%) translateY(-4px)}.relation-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;margin:0 0 50px}.panel{padding:23px;border:1px solid #ffffff1c;border-radius:22px;background:#0b1934d9}.panel h2{margin:0 0 15px;font-size:1.7rem;color:#fff0bc}.relations{display:flex;flex-wrap:wrap;gap:10px}.relation{padding:9px 13px;border:1px solid #ffffff17;border-radius:99px;background:#ffffff08;color:#dcecff;font-size:.9rem}.guide{margin:0;padding-left:1.25rem;color:var(--muted);line-height:1.9}.actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:25px}.primary,.secondary{min-height:50px;display:inline-flex;align-items:center;padding:0 20px;border-radius:14px;text-decoration:none;font-weight:900}.primary{color:#151022;background:linear-gradient(135deg,#ffe099,#ed963d)}.secondary{border:1px solid #ffffff28;background:#101f3d}.footer{display:flex;justify-content:space-between;gap:18px;padding:25px 0 42px;color:#899ab5;border-top:1px solid #ffffff12;font-size:.88rem}@media(max-width:1180px){.overview{min-height:1530px}.core{top:720px}.number{top:30px}.algebra{right:18px;top:245px}.geometry{right:18px;top:535px}.functions{right:18px;top:845px;bottom:auto}.statistics{top:1165px;bottom:auto}.logic{left:18px;top:845px;bottom:auto}.modeling{left:18px;top:535px}}@media(max-width:760px){header{position:relative}.brand span:last-child{display:none}nav a{padding:0 11px;font-size:.84rem}.hero{padding-top:35px}.overview{min-height:auto;display:grid;gap:12px;padding:15px}.map-lines{display:none}.core,.branch{position:relative!important;inset:auto!important;transform:none!important;width:100%}.core{height:auto;border-radius:25px;padding:24px}.branch:hover,.number:hover,.statistics:hover{transform:translateY(-2px)}.skills{grid-template-columns:1fr 1fr}.relation-grid{grid-template-columns:1fr}.footer{flex-direction:column}}@media(max-width:430px){.skills{grid-template-columns:1fr}.hero h1{font-size:2.5rem}}
+  </style>
+</head>
+<body>
+  <div class="stars" aria-hidden="true"></div>
+  <header class="shell">
+    <a class="brand" href="../plans/"><span class="brand-mark">✦</span><span>星火計畫</span></a>
+    <nav aria-label="主要導覽"><a href="./">互動技能樹</a><a href="../plans/">計畫總覽</a></nav>
+  </header>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">MATHEMATICS SKILL MAP</p>
+      <h1>數學技能樹總覽</h1>
+      <h2>只看能力名稱與關係，一張圖理解完整數學能力結構</h2>
+      <p>實線表示七大分支共同連結到數學能力核心；虛線表示分支之間的重要支援關係。深入的前置節點、熟練標準與任務內容，仍保留在互動技能樹中。</p>
+    </section>
+    <section class="overview" aria-label="數學七大能力分支總覽圖">
+      <svg class="map-lines" viewBox="0 0 1450 1040" preserveAspectRatio="none" aria-hidden="true">
+        <path class="main" style="stroke:#70d0ff;color:#70d0ff" d="M725 510 C725 410 725 330 725 220"/>
+        <path class="main" style="stroke:#8ce2a3;color:#8ce2a3" d="M835 455 C945 420 1035 340 1150 280"/>
+        <path class="main" style="stroke:#c5a5ff;color:#c5a5ff" d="M850 535 C970 550 1060 530 1190 500"/>
+        <path class="main" style="stroke:#ffb66f;color:#ffb66f" d="M815 630 C930 700 1035 745 1130 790"/>
+        <path class="main" style="stroke:#78e7de;color:#78e7de" d="M725 660 C725 750 725 820 725 900"/>
+        <path class="main" style="stroke:#ff9eaf;color:#ff9eaf" d="M620 625 C500 700 390 750 280 795"/>
+        <path class="main" style="stroke:#ffd66f;color:#ffd66f" d="M600 530 C480 510 370 470 255 440"/>
+        <path class="cross" d="M1060 285 C1090 360 1120 420 1160 485"/>
+        <path class="cross" d="M1090 610 C1010 690 875 805 785 885"/>
+        <path class="cross" d="M365 760 C470 835 580 875 660 895"/>
+        <path class="cross" d="M345 445 C430 345 555 275 665 215"/>
+        <path class="cross" d="M1010 500 C860 440 630 430 445 470"/>
+      </svg>
+      <div class="core"><div><i>✦</i><h2>數學能力核心</h2><p>理解數量與關係<br>選擇策略並驗證答案<br>將思考清楚表達</p></div></div>
+      <article class="branch number"><div class="branch-head"><b>1</b><h3>數感與運算</h3></div><div class="skills"><span>數量感</span><span>位值</span><span>正負數</span><span>四則運算</span><span>分數</span><span>小數</span><span>比與比例</span><span>百分率</span><span>估算</span><span>指數與根式</span></div></article>
+      <article class="branch algebra"><div class="branch-head"><b>2</b><h3>代數與方程</h3></div><div class="skills"><span>變數</span><span>代數式</span><span>同類項</span><span>分配律</span><span>一元一次方程</span><span>聯立方程</span><span>不等式</span><span>多項式</span><span>因式分解</span><span>二次方程</span></div></article>
+      <article class="branch geometry"><div class="branch-head"><b>3</b><h3>幾何與測量</h3></div><div class="skills"><span>點線面</span><span>角與平行線</span><span>三角形</span><span>四邊形</span><span>全等</span><span>相似</span><span>周長與面積</span><span>圓</span><span>體積</span><span>座標幾何</span></div></article>
+      <article class="branch functions"><div class="branch-head"><b>4</b><h3>函數與圖像</h3></div><div class="skills"><span>對應關係</span><span>座標平面</span><span>表格判讀</span><span>圖像判讀</span><span>一次函數</span><span>斜率</span><span>二次函數</span><span>變化趨勢</span><span>圖式轉換</span><span>參數影響</span></div></article>
+      <article class="branch statistics"><div class="branch-head"><b>5</b><h3>統計與機率</h3></div><div class="skills"><span>資料整理</span><span>統計圖表</span><span>平均數</span><span>中位數</span><span>眾數</span><span>離散程度</span><span>樣本與母體</span><span>基礎機率</span><span>條件機率</span><span>分布判讀</span></div></article>
+      <article class="branch logic"><div class="branch-head"><b>6</b><h3>邏輯與證明</h3></div><div class="skills"><span>條件判斷</span><span>命題</span><span>反例</span><span>分類討論</span><span>推理鏈</span><span>證明表達</span><span>反證法</span><span>歸納思考</span><span>策略選擇</span><span>論證檢查</span></div></article>
+      <article class="branch modeling"><div class="branch-head"><b>7</b><h3>建模與應用</h3></div><div class="skills"><span>情境轉換</span><span>定義變數</span><span>單位分析</span><span>速率模型</span><span>比例模型</span><span>成本模型</span><span>最佳化</span><span>資料驗證</span><span>跨域應用</span><span>結果溝通</span></div></article>
+    </section>
+    <section class="relation-grid">
+      <article class="panel"><h2>主要關係</h2><div class="relations"><span class="relation">數感 → 代數、函數、統計的基底</span><span class="relation">代數 ↔ 函數圖像</span><span class="relation">幾何 ↔ 邏輯證明</span><span class="relation">統計 ↔ 建模與資料判讀</span><span class="relation">邏輯 → 支援所有分支的驗證</span><span class="relation">建模 → 整合全部能力</span></div></article>
+      <article class="panel"><h2>閱讀方式</h2><ol class="guide"><li>先看七大分支，確認能力不是單一分數。</li><li>再看分支內的技能名稱，找到目前學習範圍。</li><li>虛線代表跨分支支援，不一定是單向先後。</li><li>需要精確前置條件時，進入互動技能樹查看。</li></ol></article>
+    </section>
+    <div class="actions"><a class="primary" href="./">進入互動技能樹</a><a class="secondary" href="../plans/">返回星火計畫總覽</a></div>
+  </main>
+  <footer class="shell footer"><span>© 星火計畫 · Spark Project</span><span>數學能力總覽頁｜不修改排課系統資料</span></footer>
+</body>
+</html>
